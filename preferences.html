@@ -28,9 +28,11 @@
             width: 45%;
             height: 200px;
             overflow: auto;
-            background-color: #333;
-            color: #f1f1f1;
+            background-color: #333;  /* Dark background */
+            color: orange;           /* Text color changed to orange */
             padding: 10px;
+            font-size: 18px;         /* Make sure font size is large enough */
+            border: 1px solid #ccc;  /* Light border for better visibility */
         }
         .buttons {
             display: flex;
@@ -49,7 +51,7 @@
             cursor: pointer;
         }
         .green-btn.active {
-            border: 3px solid red;  /* Show border when selected */
+            border: 3px solid red;
         }
         .yellow-btn {
             background-color: #FFD700;
@@ -93,13 +95,12 @@
     <script>
         // Initialize Firebase
         const firebaseConfig = {
-          apiKey: "AIzaSyCcyCr0ZC1doZK1W1zc0QMfPVsP__81mhI",
-          authDomain: "parser-output-survey.firebaseapp.com",
-          projectId: "parser-output-survey",
-          storageBucket: "parser-output-survey.appspot.com",
-          messagingSenderId: "187427222726",
-          appId: "1:187427222726:web:50d39367fb95b78cdcd3c7",
-          measurementId: "G-FLKV3XGQ1M"
+          apiKey: "YOUR_API_KEY",
+          authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+          projectId: "YOUR_PROJECT_ID",
+          storageBucket: "YOUR_PROJECT_ID.appspot.com",
+          messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+          appId: "YOUR_APP_ID"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -110,16 +111,26 @@
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
         const pdfImageElem = document.getElementById('pdf-image');
-        
+
         // Fetch data based on current index
         function loadDocument(index) {
             db.collection('text_outputs').where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    text1Elem.innerText = data.text[0];  // Text for left output
-                    text2Elem.innerText = data.text[1];  // Text for right output
-                    pdfImageElem.src = data.url;  // PDF image from Google Drive
+                    console.log("Data retrieved:", data);  // Log to check if data is correct
+
+                    // Check if data has the fields we're expecting
+                    if (data.text && data.text[0] && data.text[1] && data.url) {
+                        // Assign text and image URL from Firestore
+                        document.getElementById('text1').innerText = data.text[0];  // Text for left output
+                        document.getElementById('text2').innerText = data.text[1];  // Text for right output
+                        document.getElementById('pdf-image').src = data.url;  // Set image URL
+                    } else {
+                        console.error("Error: Data fields are missing.");
+                    }
                 });
+            }).catch((error) => {
+                console.error("Error retrieving data from Firestore:", error);
             });
         }
 
@@ -128,7 +139,7 @@
 
         // Go forward
         document.getElementById('go-forward').addEventListener('click', () => {
-            if (currentIndex < 1) {  // Ensure index does not go out of bounds
+            if (currentIndex < 1) {
                 currentIndex++;
                 loadDocument(currentIndex);
             }
@@ -136,13 +147,13 @@
 
         // Go back
         document.getElementById('go-back').addEventListener('click', () => {
-            if (currentIndex > 0) {  // Ensure index does not go below 0
+            if (currentIndex > 0) {
                 currentIndex--;
                 loadDocument(currentIndex);
             }
         });
 
-        // Logging user choices
+        // Logging user choices (same as before)
         function logUserChoice(choice) {
             db.collection('user_choices').add({
                 userName: userName,
@@ -152,7 +163,6 @@
             });
         }
 
-        // Handle button clicks
         document.getElementById('prefer-left').addEventListener('click', function() {
             toggleSelection(this);
             logUserChoice('left');
@@ -168,7 +178,6 @@
             logUserChoice('neither');
         });
 
-        // Toggle selection styles
         function toggleSelection(button) {
             const allButtons = document.querySelectorAll('.green-btn, .yellow-btn');
             allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
@@ -177,3 +186,4 @@
     </script>
 </body>
 </html>
+
