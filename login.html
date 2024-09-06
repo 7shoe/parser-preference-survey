@@ -49,18 +49,21 @@
         button:hover {
             background-color: #45a049;  /* Darker green on hover */
         }
-        /* Style for the image */
-        img {
-            max-width: 100%;
-            height: auto;
-            margin-bottom: 20px;
+        /* Style for the Firestore text */
+        #firestore-text {
+            font-size: 22px;
+            color: #FFD700;  /* Gold text color */
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
         <h1>Log into Parser-Output-Survey</h1>
-        <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/09/ff/46/09ff46b0-348e-093e-f5c8-b7c357b46509/ReleaseAppIcon-0-0-1x_U007emarketing-0-7-0-85-220.png/1200x630wa.png" alt="Sample Image">
+
+        <!-- Firestore text will be displayed here -->
+        <p id="firestore-text">Loading Firestore Text...</p>
+
         <p>Please enter your first name below:</p>
         <form id="loginForm">
             <input type="text" id="username" name="username" placeholder="Enter your name" required><br><br>
@@ -68,7 +71,49 @@
         </form>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+
     <script>
+        // Your Firebase configuration (this is the one you provided)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcyCr0ZC1doZK1W1zc0QMfPVsP__81mhI",
+            authDomain: "parser-output-survey.firebaseapp.com",
+            projectId: "parser-output-survey",
+            storageBucket: "parser-output-survey.appspot.com",
+            messagingSenderId: "187427222726",
+            appId: "1:187427222726:web:50d39367fb95b78cdcd3c7",
+            measurementId: "G-FLKV3XGQ1M"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Fetch the first document in the text_outputs collection and display its text[0]
+        function fetchFirestoreText() {
+            db.collection('text_outputs').doc('Fmze8d48pG5qOoM08e47').get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        // Display the text at index 0 in the array
+                        document.getElementById('firestore-text').innerText = data.text[0];
+                    } else {
+                        console.log("No such document!");
+                        document.getElementById('firestore-text').innerText = "No text found!";
+                    }
+                })
+                .catch((error) => {
+                    console.log("Error getting document:", error);
+                    document.getElementById('firestore-text').innerText = "Error loading text!";
+                });
+        }
+
+        // Call the function to fetch Firestore data when the page loads
+        window.onload = fetchFirestoreText;
+
+        // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault();  // Prevent form submission (no page reload)
 
