@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{9:39pm} Log into Parser-Output-Survey</title>
+    <title>Log into Parser-Output-Survey</title>
     <style>
         body {
             background-color: #181818; /* Dark background color */
@@ -20,8 +20,8 @@
             text-align: center;
         }
         h1 {
-            font-size: 48px;
-            color: #f1f1f1;
+            font-size: 48px;            /* Make the text larger */
+            color: #f1f1f1;             /* Light text color */
         }
         p {
             font-size: 20px;
@@ -42,18 +42,25 @@
             margin-top: 20px;
             border: none;
             border-radius: 5px;
-            background-color: #4CAF50;
+            background-color: #4CAF50;  /* Green button color */
             color: white;
             cursor: pointer;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #45a049;  /* Darker green on hover */
+        }
+        /* Style for the image */
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
         <h1>Log into Parser-Output-Survey</h1>
+        <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/09/ff/46/09ff46b0-348e-093e-f5c8-b7c357b46509/ReleaseAppIcon-0-0-1x_U007emarketing-0-7-0-85-220.png/1200x630wa.png" alt="Sample Image">
         <p>Please enter your first name below:</p>
         <form id="loginForm">
             <input type="text" id="username" name="username" placeholder="Enter your name" required><br><br>
@@ -63,23 +70,17 @@
 
     <script>
         document.getElementById('loginForm').addEventListener('submit', function(event) {
-            event.preventDefault();  // Prevent default form behavior
+            event.preventDefault();  // Prevent form submission (no page reload)
 
             // Get the entered username
             const username = document.getElementById('username').value;
 
-            // Check if username is not empty
-            if (username.trim() !== "") {
-                // Store username in localStorage
-                localStorage.setItem('username', username);
+            // Store username in localStorage
+            localStorage.setItem('username', username);
 
-                // Redirect to the preferences page
-                window.location.href = 'preferences.html';
-            } else {
-                alert("Please enter a valid name.");
-            }
+            // Redirect to preferences page
+            window.location.href = 'preferences.html';
         });
     </script>
 </body>
 </html>
-
