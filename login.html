@@ -14,6 +14,7 @@
             height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
+            flex-direction: column; /* Align elements vertically */
         }
         .login-container {
             text-align: center;
@@ -48,12 +49,19 @@
         button:hover {
             background-color: #45a049;  /* Darker green on hover */
         }
+        img {
+            width: 200px;  /* Adjust the size as needed */
+            margin-bottom: 20px;  /* Space between image and form */
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h1>Log into Parser-Output-Survey</h1>
-        <p>Please enter your first name below:</p>
+        <!-- Insert the image from Google Drive -->
+        <img src="https://drive.google.com/uc?export=view&id=1Jxsz_d5g3tVJWpO6FtelEqYszHVihxCB" alt="Login Image">
+
+        <h1>Parser-Output-Survey: Login</h1>
+        <p>Please enter your first name:</p>
         <form id="loginForm">
             <input type="text" id="username" name="username" placeholder="Enter your name" required><br><br>
             <button type="submit">Submit</button>
