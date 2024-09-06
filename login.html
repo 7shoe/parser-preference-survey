@@ -57,18 +57,36 @@
 </head>
 <body>
     <div class="login-container">
-        <!-- Insert the image from Google Drive -->
-        <img src="https://drive.google.com/uc?export=view&id=1Jxsz_d5g3tVJWpO6FtelEqYszHVihxCB" alt="Login Image">
-
-        <h1>Parser-Output-Survey: Login</h1>
-        <p>Please enter your first name:</p>
+        <h1>Log into Parser-Output-Survey</h1>
+        <p>Please enter your first name below:</p>
         <form id="loginForm">
             <input type="text" id="username" name="username" placeholder="Enter your name" required><br><br>
             <button type="submit">Submit</button>
         </form>
     </div>
 
+    <!-- Include Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+
     <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyCcyCr0ZC1doZK1W1zc0QMfPVsP__81mhI",
+          authDomain: "parser-output-survey.firebaseapp.com",
+          projectId: "parser-output-survey",
+          storageBucket: "parser-output-survey.appspot.com",
+          messagingSenderId: "187427222726",
+          appId: "1:187427222726:web:50d39367fb95b78cdcd3c7",
+          measurementId: "G-FLKV3XGQ1M"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        firebase.analytics();
+
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault();  // Prevent form submission
 
@@ -77,6 +95,16 @@
 
             // Store username in localStorage (we can access this in the next page)
             localStorage.setItem('username', username);
+
+            // Example of writing to Firestore (optional: you can remove this block)
+            db.collection("users").add({
+                username: username,
+                loginTime: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                console.log("User logged in: " + username);
+            }).catch((error) => {
+                console.error("Error writing document: ", error);
+            });
 
             // Navigate to the next page (preference selection)
             window.location.href = 'preferences.html';

@@ -1,0 +1,81 @@
+[
+  {
+    "id": 0,
+    "texts": [
+      {
+        "id": 1,
+        "text": "This is the first text snippet on the LEFT."
+      },
+      {
+        "id": 2,
+        "text": "This is the first text snippet on the RIGHT."
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "texts": [
+      {
+        "id": 1,
+        "text": "This is the 2nd text snippet on the LEFT."
+      },
+      {
+        "id": 2,
+        "text": "This is the 2nd text snippet on the RIGHT."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "texts": [
+      {
+        "id": 1,
+        "text": "This is the 3rd text snippet on the LEFT."
+      },
+      {
+        "id": 2,
+        "text": "This is the 3rd text snippet on the RIGHT."
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "texts": [
+      {
+        "id": 1,
+        "text": "This is a longer text snippet, providing a more in-depth comparison on the LEFT."
+      },
+      {
+        "id": 2,
+        "text": "This is a longer text snippet on the RIGHT, which also expands on a more complex topic."
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "texts": [
+      {
+        "id": 1,
+        "text": "On the LEFT side, we explore how text can differ based on context and interpretation."
+      },
+      {
+        "id": 2,
+        "text": "On the RIGHT side, we analyze how different structures in writing influence comprehension."
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "texts": [
+      {
+        "id": 1,
+        "text": "The LEFT side presents a more technical discussion of algorithms."
+      },
+      {
+        "id": 2,
+        "text": "The RIGHT side compares theoretical vs. practical implications in machine learning."
+      }
+    ]
+  }
+]
+
