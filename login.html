@@ -20,8 +20,8 @@
             text-align: center;
         }
         h1 {
-            font-size: 48px;            /* Make the text larger */
-            color: #f1f1f1;             /* Light text color */
+            font-size: 48px;
+            color: #f1f1f1;
         }
         p {
             font-size: 20px;
@@ -42,16 +42,12 @@
             margin-top: 20px;
             border: none;
             border-radius: 5px;
-            background-color: #4CAF50;  /* Green button color */
+            background-color: #4CAF50;
             color: white;
             cursor: pointer;
         }
         button:hover {
-            background-color: #45a049;  /* Darker green on hover */
-        }
-        img {
-            width: 200px;  /* Adjust the size as needed */
-            margin-bottom: 20px;  /* Space between image and form */
+            background-color: #45a049;
         }
     </style>
 </head>
@@ -65,49 +61,23 @@
         </form>
     </div>
 
-    <!-- Include Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-analytics.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
-
     <script>
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-          apiKey: "AIzaSyCcyCr0ZC1doZK1W1zc0QMfPVsP__81mhI",
-          authDomain: "parser-output-survey.firebaseapp.com",
-          projectId: "parser-output-survey",
-          storageBucket: "parser-output-survey.appspot.com",
-          messagingSenderId: "187427222726",
-          appId: "1:187427222726:web:50d39367fb95b78cdcd3c7",
-          measurementId: "G-FLKV3XGQ1M"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        firebase.analytics();
-
         document.getElementById('loginForm').addEventListener('submit', function(event) {
-            event.preventDefault();  // Prevent form submission
+            event.preventDefault();  // Prevent default form behavior
 
             // Get the entered username
             const username = document.getElementById('username').value;
 
-            // Store username in localStorage (we can access this in the next page)
-            localStorage.setItem('username', username);
+            // Check if username is not empty
+            if (username.trim() !== "") {
+                // Store username in localStorage
+                localStorage.setItem('username', username);
 
-            // Example of writing to Firestore (optional: you can remove this block)
-            db.collection("users").add({
-                username: username,
-                loginTime: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                console.log("User logged in: " + username);
-            }).catch((error) => {
-                console.error("Error writing document: ", error);
-            });
-
-            // Navigate to the next page (preference selection)
-            window.location.href = 'preferences.html';
+                // Redirect to the preferences page
+                window.location.href = 'preferences.html';
+            } else {
+                alert("Please enter a valid name.");
+            }
         });
     </script>
 </body>
