@@ -64,6 +64,9 @@
         <!-- Firestore text will be displayed here -->
         <p id="firestore-text">Loading Firestore Text...</p>
 
+        <!-- Display the image -->
+        <img src="" id="firestore-image" alt="Image from Google Drive">
+
         <p>Please enter your first name below:</p>
         <form id="loginForm">
             <input type="text" id="username" name="username" placeholder="Enter your name" required><br><br>
@@ -97,8 +100,10 @@
                 .then((doc) => {
                     if (doc.exists) {
                         const data = doc.data();
-                        // Display the text at index 0 in the array
-                        document.getElementById('firestore-text').innerText = data.text[0];
+                        // Display the URL (for debugging)
+                        document.getElementById('firestore-text').innerText = data.url;
+                        // Set the image source
+                        document.getElementById('firestore-image').src = data.url; 
                     } else {
                         console.log("No such document!");
                         document.getElementById('firestore-text').innerText = "No text found!";
