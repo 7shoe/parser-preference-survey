@@ -85,6 +85,7 @@
 </head>
 <body>
     <button id="go-back">Go back</button>
+    <h1 id="survey-title" style="font-family: Helvetica, Arial, sans-serif; color: white; text-align: center;"></h1>
     <img id="pdf-image" src="" alt="PDF Snippet">
     <div class="text-box-container">
         <div class="text-box" id="text1"></div>
@@ -135,6 +136,9 @@
                         document.getElementById('text1').innerText = data.text[0];
                         document.getElementById('text2').innerText = data.text[1];
                         document.getElementById('pdf-image').src = data.url;
+
+                        // headline
+                        document.getElementById('survey-title').innerText = `PDF Parsing Survey: #${index}`;
                     } else {
                         console.error("Error: Data fields are missing.");
                     }
