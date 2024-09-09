@@ -15,7 +15,7 @@
             justify-content: flex-start;
         }
         #pdf-image {
-            width: 35%;
+            width: 32%;
             margin-bottom: 20px;
         }
         .text-box-container {
@@ -62,15 +62,20 @@
         #go-back, #go-forward {
             background-color: #555;
             color: white;
-            position: absolute;
+            position: fixed;
+            bottom: 20px;  /* Position at the bottom */
+            padding: 10px;
+            cursor: pointer;
         }
         #go-back {
-            top: 20px;
             left: 20px;
         }
         #go-forward {
-            top: 20px;
             right: 20px;
+        }
+        #go-forward:disabled {
+            background-color: grey;  /* Grey out if disabled */
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -105,88 +110,109 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+const db = firebase.firestore();
 
-        let currentIndex = 0;  // Default to document with id=0
-        const userName = localStorage.getItem('username');  // Get user's name from login
-        const text1Elem = document.getElementById('text1');
-        const text2Elem = document.getElementById('text2');
-        const pdfImageElem = document.getElementById('pdf-image');
+let currentIndex = 0;  // Default to document with id=0
+const userName = localStorage.getItem('username');  // Get user's name from login
+const text1Elem = document.getElementById('text1');
+const text2Elem = document.getElementById('text2');
+const pdfImageElem = document.getElementById('pdf-image');
+const goForwardBtn = document.getElementById('go-forward');  // Reference to Go Forward button
 
-        // Fetch data based on current index
-        function loadDocument(index) {
-            db.collection('text_outputs').where('id', '==', index).get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if (data.text && data.text[0] && data.text[1] && data.url) {
-                        document.getElementById('text1').innerText = data.text[0];
-                        document.getElementById('text2').innerText = data.text[1];
-                        document.getElementById('pdf-image').src = data.url;
-                    } else {
-                        console.error("Error: Data fields are missing.");
-                    }
-                });
-            }).catch((error) => {
-                console.error("Error retrieving data from Firestore:", error);
-            });
-        }
+// Disable the "Go Forward" button initially
+goForwardBtn.disabled = true;
 
-        // Load the first document by default
-        loadDocument(currentIndex);
+// Fetch data based on current index
+function loadDocument(index) {
+    db.collection('text_outputs').where('id', '==', index).get().then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.text && data.text[0] && data.text[1] && data.url) {
+                document.getElementById('text1').innerText = data.text[0];
+                document.getElementById('text2').innerText = data.text[1];
+                document.getElementById('pdf-image').src = data.url;
+            } else {
+                console.error("Error: Data fields are missing.");
+            }
+        });
+    }).catch((error) => {
+        console.error("Error retrieving data from Firestore:", error);
+    });
+}
+    // Load the first document by default
+    loadDocument(currentIndex);
 
-        // Function to reset button states when navigating forward or backward
-        function resetButtons() {
-            const allButtons = document.querySelectorAll('.green-btn, .yellow-btn');
-            allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
-        }
+    // Function to reset button states when navigating forward or backward
+    function resetButtons() {
+        const allButtons = document.querySelectorAll('.green-btn, .yellow-btn');
+        allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
+        goForwardBtn.disabled = true;  // Disable "Go Forward" again until new choice is made
+    }
 
-        // Call resetButtons when navigating forward or backward
-        document.getElementById('go-forward').addEventListener('click', () => {
+    // Function to show an error message if "Go Forward" is clicked when disabled
+    function showError() {
+        alert(`I'm sorry, ${userName}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.`);
+    }
+
+    // Call resetButtons when navigating forward or backward
+    document.getElementById('go-forward').addEventListener('click', () => {
+        if (!goForwardBtn.disabled) {
             if (currentIndex < 1) {
                 currentIndex++;
                 loadDocument(currentIndex);
                 resetButtons();  // Reset button states
             }
-        });
-
-        document.getElementById('go-back').addEventListener('click', () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                loadDocument(currentIndex);
-                resetButtons();  // Reset button states
-            }
-        });
-
-        // Logging user choices
-        function logUserChoice(choice) {
-            db.collection('user_choices').add({
-                userName: userName,
-                choice: choice,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                documentIndex: currentIndex
-            });
+        } else {
+            showError();
         }
+    });
 
-        document.getElementById('prefer-left').addEventListener('click', function() {
-            toggleSelection(this);
-            logUserChoice('left');
-        });
-
-        document.getElementById('prefer-right').addEventListener('click', function() {
-            toggleSelection(this);
-            logUserChoice('right');
-        });
-
-        document.getElementById('neither').addEventListener('click', function() {
-            toggleSelection(this);
-            logUserChoice('neither');
-        });
-
-        function toggleSelection(button) {
-            const allButtons = document.querySelectorAll('.green-btn, .yellow-btn');
-            allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
-            button.classList.toggle('active');  // Toggle active class for the clicked button
+    document.getElementById('go-back').addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            loadDocument(currentIndex);
+            resetButtons();  // Reset button states
         }
+    });
+
+    // Logging user choices
+    function logUserChoice(choice) {
+        db.collection('user_choices').add({
+            userName: userName,
+            choice: choice,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            documentIndex: currentIndex
+        });
+    }
+
+    // Enable "Go Forward" button when a choice is made
+    function enableGoForward() {
+        goForwardBtn.disabled = false;  // Enable "Go Forward"
+    }
+
+    document.getElementById('prefer-left').addEventListener('click', function() {
+        toggleSelection(this);
+        logUserChoice('left');
+        enableGoForward();  // Enable "Go Forward" after selection
+    });
+
+    document.getElementById('prefer-right').addEventListener('click', function() {
+        toggleSelection(this);
+        logUserChoice('right');
+        enableGoForward();  // Enable "Go Forward" after selection
+    });
+
+    document.getElementById('neither').addEventListener('click', function() {
+        toggleSelection(this);
+        logUserChoice('neither');
+        enableGoForward();  // Enable "Go Forward" after selection
+    });
+
+    function toggleSelection(button) {
+        const allButtons = document.querySelectorAll('.green-btn, .yellow-btn');
+        allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
+        button.classList.toggle('active');  // Toggle active class for the clicked button
+    }
     </script>
 </body>
 </html>
