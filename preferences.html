@@ -29,10 +29,11 @@
             height: 200px;
             overflow: auto;
             background-color: #333;  /* Dark background */
-            color: orange;           /* Text color changed to orange */
+            color: rgba(247, 247, 247, 0.985);           /* Text color changed to orange */
             padding: 10px;
             font-size: 18px;         /* Make sure font size is large enough */
             border: 1px solid #ccc;  /* Light border for better visibility */
+            font-family: Helvetica, Arial, sans-serif;  /* Change font to Helvetica */
         }
         .buttons {
             display: flex;
@@ -51,13 +52,16 @@
             cursor: pointer;
         }
         .green-btn.active {
-            border: 3px solid red;
+            border: 4px solid rgb(181, 5, 5);
         }
         .yellow-btn {
             background-color: #FFD700;
             color: white;
             border: none;
             cursor: pointer;
+        }
+        .yellow-btn.active {
+            border: 4px solid rgb(181, 5, 5);  /* Border color change when "Neither" is active */
         }
         #go-back, #go-forward {
             background-color: #555;
