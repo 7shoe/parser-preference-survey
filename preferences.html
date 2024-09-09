@@ -15,7 +15,7 @@
             justify-content: flex-start;
         }
         #pdf-image {
-            width: 50%;
+            width: 35%;
             margin-bottom: 20px;
         }
         .text-box-container {
@@ -118,14 +118,10 @@
             db.collection('text_outputs').where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    console.log("Data retrieved:", data);  // Log to check if data is correct
-
-                    // Check if data has the fields we're expecting
                     if (data.text && data.text[0] && data.text[1] && data.url) {
-                        // Assign text and image URL from Firestore
-                        document.getElementById('text1').innerText = data.text[0];  // Text for left output
-                        document.getElementById('text2').innerText = data.text[1];  // Text for right output
-                        document.getElementById('pdf-image').src = data.url;  // Set image URL
+                        document.getElementById('text1').innerText = data.text[0];
+                        document.getElementById('text2').innerText = data.text[1];
+                        document.getElementById('pdf-image').src = data.url;
                     } else {
                         console.error("Error: Data fields are missing.");
                     }
@@ -138,23 +134,30 @@
         // Load the first document by default
         loadDocument(currentIndex);
 
-        // Go forward
+        // Function to reset button states when navigating forward or backward
+        function resetButtons() {
+            const allButtons = document.querySelectorAll('.green-btn, .yellow-btn');
+            allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
+        }
+
+        // Call resetButtons when navigating forward or backward
         document.getElementById('go-forward').addEventListener('click', () => {
             if (currentIndex < 1) {
                 currentIndex++;
                 loadDocument(currentIndex);
+                resetButtons();  // Reset button states
             }
         });
 
-        // Go back
         document.getElementById('go-back').addEventListener('click', () => {
             if (currentIndex > 0) {
                 currentIndex--;
                 loadDocument(currentIndex);
+                resetButtons();  // Reset button states
             }
         });
 
-        // Logging user choices (same as before)
+        // Logging user choices
         function logUserChoice(choice) {
             db.collection('user_choices').add({
                 userName: userName,
@@ -187,4 +190,3 @@
     </script>
 </body>
 </html>
-
