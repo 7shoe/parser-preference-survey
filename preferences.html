@@ -120,15 +120,18 @@
             cursor: not-allowed;
         }
         #diff-btn {
-            width: 45px;  /* Make the Diff button smaller */
-            height: 45px;  /* Increase height if needed */
+            width: 50px;  /* Set the width */
+            height: 50px;  /* Set the height */
             background-color: lightgrey;  /* Default light grey background */
             color: black;  /* Default black font */
             cursor: pointer;
             border: none;
-            font-size: 18px;  /* Adjust font size */
+            font-size: 22px;  /* Adjust font size */
             margin: 0 10px;
             align-self: center;
+            display: flex;  /* Use flexbox for centering */
+            justify-content: center;  /* Center horizontally */
+            align-items: center;  /* Center vertically */
             transition: background-color 0.3s ease, color 0.3s ease;  /* Smooth transition */
         }
         #diff-btn.active {
