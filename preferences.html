@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preferences</title>
+    <!-- Updated button-container -->
     <style>
         body {
             background-color: #181818;
@@ -25,8 +26,8 @@
             margin-bottom: 20px;
         }
         .text-box {
-            width: 35%;
-            height: 400px;
+            width: 55%;
+            height: 600px;
             overflow: auto;
             background-color: #333;  /* Dark background */
             color: rgba(247, 247, 247, 0.985);           /* Text color */
@@ -45,32 +46,37 @@
             padding: 10px 20px;
             font-size: 16px;
         }
+
+        .green-btn, .yellow-btn, .white-btn {
+            border: 4px solid #181818;  /* Same color as the background */
+            cursor: pointer;
+        }
+
         .green-btn {
             background-color: #4CAF50;
             color: white;
-            border: none;
-            cursor: pointer;
         }
+
         .green-btn.active {
-            border: 4px solid rgb(181, 5, 5);
+            border: 4px solid rgb(181, 5, 5);  /* Red border when active */
         }
+
         .yellow-btn {
             background-color: #FFD700;
             color: white;
-            border: none;
-            cursor: pointer;
         }
+
         .yellow-btn.active {
-            border: 4px solid rgb(181, 5, 5);  /* Border color change when "Neither" is active */
+            border: 4px solid rgb(181, 5, 5);  /* Red border when active */
         }
+
         .white-btn {
             background-color: white;
             color: black;
-            border: none;
-            cursor: pointer;
         }
+
         .white-btn.active {
-            border: 4px solid rgb(181, 5, 5);  /* Border color change when "Neither" is active */
+            border: 4px solid rgb(181, 5, 5);  /* Red border when active */
         }
         #go-back, #go-forward {
             background-color: #555;
@@ -87,10 +93,25 @@
             margin-top: 40px;
         }
         #go-back {
-            left: 0;
+            position: fixed;  /* Fixed position */
+            left: 0;          /* Stick to the bottom left */
+            bottom: 0;        /* Stick to the bottom */
+            padding: 10px;
+            font-size: 16px;
+            background-color: #555;
+            color: white;
+            cursor: pointer;
         }
+
         #go-forward {
-            right: 0;
+            position: fixed;  /* Fixed position */
+            right: 0;         /* Stick to the bottom right */
+            bottom: 0;        /* Stick to the bottom */
+            padding: 10px;
+            font-size: 16px;
+            background-color: #555;
+            color: white;
+            cursor: pointer;
         }
         #go-forward:disabled {
             background-color: grey;  /* Grey out if disabled */
@@ -109,7 +130,6 @@
     </style>
 </head>
 <body>
-    <button id="go-back">Go back</button>
     <h1 id="survey-title" style="font-family: Helvetica, Arial, sans-serif; color: white; text-align: center;"></h1>
     <img id="pdf-image" src="" alt="PDF Snippet">
     <div class="text-box-container">
@@ -124,6 +144,7 @@
     </div>
     <div class="button-container">
         <button id="go-forward">Go forward</button>
+        <button id="go-back">Go back</button>
     </div>
 
     <!-- Firebase SDKs -->
@@ -152,10 +173,10 @@
         const pdfImageElem = document.getElementById('pdf-image');
         const goForwardBtn = document.getElementById('go-forward');  // Reference to Go Forward button
 
-        // Disable the "Go Forward" button initially
+        // disable the "Go Forward" button initially
         goForwardBtn.disabled = true;
 
-        // Fetch data based on current index
+        // fetch data based on current index
         function loadDocument(index) {
             db.collection('text_outputs').where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
@@ -164,6 +185,18 @@
                         document.getElementById('text1').innerText = data.text[0];
                         document.getElementById('text2').innerText = data.text[1];
                         document.getElementById('pdf-image').src = data.url;
+
+                        // Initialize the image size to 30%
+                        pdfImageElem.style.width = '10%';  // Start with 30% size
+
+                        // Add click event listener for toggling the size
+                        pdfImageElem.addEventListener('click', function () {
+                            if (pdfImageElem.style.width === '10%') {
+                                pdfImageElem.style.width = '32%';  // Switch to original size
+                            } else {
+                                pdfImageElem.style.width = '10%';  // Switch back to small size
+                            }
+                        });
 
                         // headline
                         document.getElementById('survey-title').innerText = `PDF Parsing Survey: #${index + 1}`;
@@ -176,10 +209,11 @@
             });
         }
 
-        // Load the first document by default
+
+        // load the first document by default
         loadDocument(currentIndex);
 
-        // Function to reset button states when navigating forward or backward
+        // function to reset button states when navigating forward or backward
         function resetButtons() {
             const allButtons = document.querySelectorAll('.green-btn, .white-btn');
             allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
