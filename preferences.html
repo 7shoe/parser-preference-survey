@@ -120,15 +120,24 @@
             cursor: not-allowed;
         }
         #diff-btn {
-            width: 5%;  /* Make the Diff button smaller */
-            height: 100px;  /* Increase height if needed */
-            background-color: #FFD700;
-            color: white;
+            width: 100%;  /* Make the Diff button smaller */
+            height: 30;  /* Increase height if needed */
+            background-color: lightgrey;  /* Default light grey background */
+            color: black;  /* Default black font */
             cursor: pointer;
             border: none;
-            font-size: 16px;
-            margin: 0 10px;  /* Add some margin around the button for visual balance */
-            align-self: center;  /* Center the button vertically */
+            font-size: 14px;  /* Adjust font size */
+            margin: 0 10px;
+            align-self: center;
+            transition: background-color 0.3s ease, color 0.3s ease;  /* Smooth transition */
+        }
+        #diff-btn.active {
+            background-color: #FFD700;  /* Yellow when clicked */
+            color: white;  /* White font when clicked */
+        }
+        #survey-title {
+            font-size: 20px;  /* Set the desired size here */
+            text-align: center;
         }
     </style>
 </head>
@@ -189,20 +198,20 @@
                         document.getElementById('text2').innerText = data.text[1];
                         document.getElementById('pdf-image').src = data.url;
 
-                        // Initialize the image size to 30%
-                        pdfImageElem.style.width = '15%';  // Start with 30% size
+                        // Initialize the image size to 32%
+                        pdfImageElem.style.width = '13%';  // Start with 30% size
 
                         // Add click event listener for toggling the size
                         pdfImageElem.addEventListener('click', function () {
-                            if (pdfImageElem.style.width === '15%') {
-                                pdfImageElem.style.width = '35%';  // Switch to original size
+                            if (pdfImageElem.style.width === '13%') {
+                                pdfImageElem.style.width = '32%';  // Switch to original size
                             } else {
-                                pdfImageElem.style.width = '15%';  // Switch back to small size
+                                pdfImageElem.style.width = '13%';  // Switch back to small size
                             }
                         });
 
                         // headline
-                        document.getElementById('survey-title').innerText = `PDF Parsing Survey: #${index + 1}`;
+                        document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1}`;
                     } else {
                         console.error("Error: Data fields are missing.");
                     }
@@ -216,6 +225,23 @@
         // load the first document by default
         loadDocument(currentIndex);
 
+        // Add the Diff button event listener here
+        const diffBtn = document.getElementById('diff-btn');
+
+        diffBtn.addEventListener('click', function() {
+            // Toggle active class for the Diff button
+            diffBtn.classList.toggle('active');
+
+            // Add your additional functionality here
+            if (diffBtn.classList.contains('active')) {
+                console.log("Diff button is active: perform action");
+                // Trigger whatever action is needed when active
+            } else {
+                console.log("Diff button is inactive: revert action");
+                // Trigger action when inactive (optional)
+            }
+        });
+
         // function to reset button states when navigating forward or backward
         function resetButtons() {
             const allButtons = document.querySelectorAll('.green-btn, .white-btn');
@@ -223,12 +249,12 @@
             goForwardBtn.disabled = true;  // Disable "Go Forward" again until new choice is made
         }
 
-        // Function to show an error message if "Go Forward" is clicked when disabled
+        // function to show an error message if "Go Forward" is clicked when disabled
         function showError() {
             alert(`I'm sorry, ${userName}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.`);
         }
 
-        // Call resetButtons when navigating forward or backward
+        // call resetButtons when navigating forward or backward
         document.getElementById('go-forward').addEventListener('click', () => {
             if (!goForwardBtn.disabled) {
                 if (currentIndex < 1) {
