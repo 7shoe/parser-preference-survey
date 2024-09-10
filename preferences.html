@@ -17,6 +17,7 @@
         #pdf-image {
             width: 32%;
             margin-bottom: 20px;
+            cursor: pointer; /* Make it clear the image is clickable */
         }
         .text-box-container {
             display: flex;
@@ -25,11 +26,11 @@
             margin-bottom: 20px;
         }
         .text-box {
-            width: 45%;
-            height: 200px;
+            width: 35%;
+            height: 400px;
             overflow: auto;
             background-color: #333;  /* Dark background */
-            color: rgba(247, 247, 247, 0.985);           /* Text color changed to orange */
+            color: rgba(247, 247, 247, 0.985);           /* Text color */
             padding: 10px;
             font-size: 18px;         /* Make sure font size is large enough */
             border: 1px solid #ccc;  /* Light border for better visibility */
@@ -63,23 +64,48 @@
         .yellow-btn.active {
             border: 4px solid rgb(181, 5, 5);  /* Border color change when "Neither" is active */
         }
+        .white-btn {
+            background-color: white;
+            color: black;
+            border: none;
+            cursor: pointer;
+        }
+        .white-btn.active {
+            border: 4px solid rgb(181, 5, 5);  /* Border color change when "Neither" is active */
+        }
         #go-back, #go-forward {
             background-color: #555;
             color: white;
-            position: fixed;
-            bottom: 20px;  /* Position at the bottom */
+            position: relative;
             padding: 10px;
             cursor: pointer;
+            margin-top: 20px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            margin-top: 40px;
         }
         #go-back {
-            left: 20px;
+            left: 0;
         }
         #go-forward {
-            right: 20px;
+            right: 0;
         }
         #go-forward:disabled {
             background-color: grey;  /* Grey out if disabled */
             cursor: not-allowed;
+        }
+        #diff-btn {
+            background-color: #FFD700;
+            color: white;
+            padding: 20px;  /* Square button */
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            margin-bottom: 20px;
+            align-self: center;  /* Center button under the image */
         }
     </style>
 </head>
@@ -89,14 +115,17 @@
     <img id="pdf-image" src="" alt="PDF Snippet">
     <div class="text-box-container">
         <div class="text-box" id="text1"></div>
+        <button id="diff-btn">Diff</button> <!-- Added Diff button -->
         <div class="text-box" id="text2"></div>
     </div>
     <div class="buttons">
         <button class="green-btn" id="prefer-left">I prefer this</button>
-        <button class="yellow-btn" id="neither">Neither</button>
+        <button class="white-btn" id="neither">Neither</button> <!-- Updated Neither button style -->
         <button class="green-btn" id="prefer-right">I prefer this</button>
     </div>
-    <button id="go-forward">Go forward</button>
+    <div class="button-container">
+        <button id="go-forward">Go forward</button>
+    </div>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
@@ -118,6 +147,7 @@
         const db = firebase.firestore();
 
         let currentIndex = 0;  // Default to document with id=0
+        let isSmallImage = true;  // Tracks whether small or large image is displayed
         const userName = localStorage.getItem('username');  // Get user's name from login
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
@@ -129,16 +159,29 @@
 
         // Fetch data based on current index
         function loadDocument(index) {
-            db.collection('text_outputs').where('id', '==', index).get().then((querySnapshot) => {
+            db.collection('actual_survey_data').where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (data.text && data.text[0] && data.text[1] && data.url) {
+                    if (data.text && data.text[0] && data.text[1] && data.urls) {
                         document.getElementById('text1').innerText = data.text[0];
                         document.getElementById('text2').innerText = data.text[1];
-                        document.getElementById('pdf-image').src = data.url;
+                        
+                        // Load smaller image initially
+                        pdfImageElem.src = data.urls[0]; 
 
-                        // headline
-                        document.getElementById('survey-title').innerText = `PDF Parsing Survey: #${index}`;
+                        // Add click event to toggle between small and large images
+                        pdfImageElem.addEventListener('click', function() {
+                            if (isSmallImage) {
+                                pdfImageElem.src = data.urls[1];  // Switch to large image
+                                isSmallImage = false;
+                            } else {
+                                pdfImageElem.src = data.urls[0];  // Switch back to small image
+                                isSmallImage = true;
+                            }
+                        });
+
+                        // Update the headline
+                        document.getElementById('survey-title').innerText = `PDF Parsing Survey: #${index + 1}`;
                     } else {
                         console.error("Error: Data fields are missing.");
                     }
@@ -153,7 +196,7 @@
 
         // Function to reset button states when navigating forward or backward
         function resetButtons() {
-            const allButtons = document.querySelectorAll('.green-btn, .yellow-btn');
+            const allButtons = document.querySelectorAll('.green-btn, .white-btn');
             allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
             goForwardBtn.disabled = true;  // Disable "Go Forward" again until new choice is made
         }
@@ -218,10 +261,25 @@
         });
 
         function toggleSelection(button) {
-            const allButtons = document.querySelectorAll('.green-btn, .yellow-btn');
+            const allButtons = document.querySelectorAll('.green-btn, .white-btn');
             allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
             button.classList.toggle('active');  // Toggle active class for the clicked button
         }
+
+        // Highlight differences when Diff button is clicked
+        let isDiffActive = false;
+        document.getElementById('diff-btn').addEventListener('click', function() {
+            if (!isDiffActive) {
+                // Apply diff highlighting
+                applyDiffHighlight(diffs);  // Assuming diffs is fetched from Firestore as well
+                isDiffActive = true;
+            } else {
+                // Revert to normal text
+                document.getElementById('text1').innerText = text1;
+                document.getElementById('text2').innerText = text2;
+                isDiffActive = false;
+            }
+        });
     </script>
 </body>
 </html>
