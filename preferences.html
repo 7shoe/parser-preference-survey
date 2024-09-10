@@ -204,14 +204,18 @@
                         document.getElementById('pdf-image').src = data.url;
 
                         // Initialize the image size to 32%
-                        pdfImageElem.style.width = '13%';  // Start with 30% size
+                        pdfImageElem.style.width = '13%';  // Start with small size
 
-                        // Add click event listener for toggling the size
-                        pdfImageElem.addEventListener('click', function () {
-                            if (pdfImageElem.style.width === '13%') {
-                                pdfImageElem.style.width = '32%';  // Switch to original size
+                        // Remove any previous event listeners
+                        pdfImageElem.replaceWith(pdfImageElem.cloneNode(true));
+                        const newPdfImageElem = document.getElementById('pdf-image');
+
+                        // Add click event listener for toggling the size of the new image
+                        newPdfImageElem.addEventListener('click', function () {
+                            if (newPdfImageElem.style.width === '13%') {
+                                newPdfImageElem.style.width = '32%';  // Switch to original size
                             } else {
-                                pdfImageElem.style.width = '13%';  // Switch back to small size
+                                newPdfImageElem.style.width = '13%';  // Switch back to small size
                             }
                         });
 
@@ -266,6 +270,9 @@
                     currentIndex++;
                     loadDocument(currentIndex);
                     resetButtons();  // Reset button states
+
+                    // Reset the Diff button to "unclicked" state
+                    diffBtn.classList.remove('active');
                 }
             } else {
                 showError();
