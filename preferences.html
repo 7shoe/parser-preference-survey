@@ -126,7 +126,7 @@
             color: black;  /* Default black font */
             cursor: pointer;
             border: none;
-            font-size: 12px;  /* Adjust font size */
+            font-size: 18px;  /* Adjust font size */
             margin: 0 10px;
             align-self: center;
             transition: background-color 0.3s ease, color 0.3s ease;  /* Smooth transition */
@@ -136,8 +136,9 @@
             color: rgb(0, 0, 0);  /* White font when clicked */
         }
         #survey-title {
-            font-size: 20px;  /* Set the desired size here */
+            font-size: 18px;  /* Set the desired size here */
             text-align: center;
+            font-weight: normal;  /* Remove bold */
         }
     </style>
 </head>
@@ -146,7 +147,7 @@
     <img id="pdf-image" src="" alt="PDF Snippet">
     <div class="text-box-container">
         <div class="text-box" id="text1"></div>
-        <button id="diff-btn">Diff</button> <!-- Added Diff button -->
+        <button id="diff-btn">Δ</button>
         <div class="text-box" id="text2"></div>
     </div>
     <div class="buttons">
