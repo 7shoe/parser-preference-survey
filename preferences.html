@@ -39,6 +39,14 @@
             line-height: 1.5;  /* Add more spacing between lines */
             border: 1px solid #ccc;  /* Light border for better visibility */
         }
+        #diff-container {
+            width: 95%;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #444;
+            color: #fff;
+            border-radius: 8px;
+        }
         .buttons {
             display: flex;
             justify-content: space-between;
@@ -149,6 +157,10 @@
 <body>
     <h1 id="survey-title" style="font-family: Helvetica, Arial, sans-serif; color: white; text-align: center;"></h1>
     <img id="pdf-image" src="" alt="PDF Snippet">
+    
+    <!-- Diff Section -->
+    <div id="diff-container"></div>
+    
     <div class="text-box-container">
         <div class="text-box" id="text1"></div>
         <button id="diff-btn">Δ</button>
@@ -187,6 +199,7 @@
         const userName = localStorage.getItem('username');  // Get user's name from login
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
+        const diffContainerElem = document.getElementById('diff-container');
         const goForwardBtn = document.getElementById('go-forward');  // Reference to Go Forward button
 
         // Disable the "Go Forward" button initially
@@ -197,9 +210,13 @@
             db.collection('four_sample_imgs').where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (data.text && data.text[0] && data.text[1] && data.url) {
+                    if (data.text && data.text[0] && data.text[1] && data.url && data.diffs) {
                         document.getElementById('text1').innerText = data.text[0];
                         document.getElementById('text2').innerText = data.text[1];
+                        
+                        // Display differences in the "diff-container"
+                        diffContainerElem.innerHTML = data.diffs.map(diff => diff.text).join('<br>');
+
                         const oldPdfImageElem = document.getElementById('pdf-image');
 
                         // Replace the old image with a new one
@@ -263,14 +280,12 @@
         // Call resetButtons when navigating forward or backward
         document.getElementById('go-forward').addEventListener('click', () => {
             if (!goForwardBtn.disabled) {
-                if (currentIndex < 1) {
-                    currentIndex++;
-                    loadDocument(currentIndex);
-                    resetButtons();  // Reset button states
+                currentIndex++;
+                loadDocument(currentIndex);
+                resetButtons();  // Reset button states
 
-                    // Reset the Diff button to "unclicked" state
-                    diffBtn.classList.remove('active');
-                }
+                // Reset the Diff button to "unclicked" state
+                diffBtn.classList.remove('active');
             } else {
                 showError();
             }
