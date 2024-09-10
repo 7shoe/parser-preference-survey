@@ -214,8 +214,8 @@
                         document.getElementById('text1').innerText = data.text[0];
                         document.getElementById('text2').innerText = data.text[1];
                         
-                        // Display differences in the "diff-container"
-                        diffContainerElem.innerHTML = data.diffs.map(diff => diff.text).join('<br>');
+                        // Do NOT display differences in the "diff-container"
+                        // diffContainerElem.innerHTML = data.diffs.map(diff => diff.text).join('<br>');
 
                         const oldPdfImageElem = document.getElementById('pdf-image');
 
