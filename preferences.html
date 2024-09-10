@@ -194,7 +194,7 @@
 
         // Fetch data based on current index
         function loadDocument(index) {
-            db.collection('text_outputs').where('id', '==', index).get().then((querySnapshot) => {
+            db.collection('four_sample_pngs').where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     if (data.text && data.text[0] && data.text[1] && data.url) {
