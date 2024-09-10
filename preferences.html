@@ -188,6 +188,7 @@
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
         const goForwardBtn = document.getElementById('go-forward');  // Reference to Go Forward button
+        const pdfImageElem = document.getElementById('pdf-image');
 
         // Disable the "Go Forward" button initially
         goForwardBtn.disabled = true;
@@ -200,13 +201,14 @@
                     if (data.text && data.text[0] && data.text[1] && data.url) {
                         document.getElementById('text1').innerText = data.text[0];
                         document.getElementById('text2').innerText = data.text[1];
-                        const oldPdfImageElem = document.getElementById('pdf-image');
 
-                        // Replace the old image with a new one
-                        const newPdfImageElem = oldPdfImageElem.cloneNode(true);
+                        // Replace the current image and add the toggle functionality
+                        const newPdfImageElem = document.createElement('img');
+                        newPdfImageElem.id = 'pdf-image';
                         newPdfImageElem.src = data.url;
-                        newPdfImageElem.style.width = '13%';  // Start with the small size
-                        oldPdfImageElem.replaceWith(newPdfImageElem);
+                        newPdfImageElem.style.width = '13%';  // Start with small size
+                        newPdfImageElem.style.cursor = 'pointer';  // Add pointer cursor
+                        pdfImageElem.replaceWith(newPdfImageElem);
 
                         // Add click event listener for toggling the size of the new image
                         newPdfImageElem.addEventListener('click', function () {
@@ -263,14 +265,12 @@
         // Call resetButtons when navigating forward or backward
         document.getElementById('go-forward').addEventListener('click', () => {
             if (!goForwardBtn.disabled) {
-                if (currentIndex < 1) {
-                    currentIndex++;
-                    loadDocument(currentIndex);
-                    resetButtons();  // Reset button states
+                currentIndex++;
+                loadDocument(currentIndex);
+                resetButtons();  // Reset button states
 
-                    // Reset the Diff button to "unclicked" state
-                    diffBtn.classList.remove('active');
-                }
+                // Reset the Diff button to "unclicked" state
+                diffBtn.classList.remove('active');
             } else {
                 showError();
             }
