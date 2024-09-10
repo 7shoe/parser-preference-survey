@@ -21,14 +21,15 @@
         }
         .text-box-container {
             display: flex;
-            justify-content: center;  /* Center the text boxes */
-            width: 95%;  /* Increase the overall width to reduce left and right gaps */
+            justify-content: space-between;  /* Space items evenly */
+            align-items: center;  /* Align text areas and button vertically */
+            width: 95%;  /* Make use of nearly full width */
             margin-bottom: 20px;
         }
 
         .text-box {
-            width: 40%;  /* Adjust the width to occupy more space, while leaving room for the Diff button */
-            height: 800px;
+            width: 55%;  /* Each text area gets equal width */
+            height: 500px;
             overflow: auto;
             background-color: #333;
             color: rgba(247, 247, 247, 0.985);
@@ -119,14 +120,15 @@
             cursor: not-allowed;
         }
         #diff-btn {
+            width: 5%;  /* Make the Diff button smaller */
+            height: 100px;  /* Increase height if needed */
             background-color: #FFD700;
             color: white;
-            padding: 20px;  /* Square button */
             cursor: pointer;
             border: none;
             font-size: 16px;
-            margin-bottom: 20px;
-            align-self: center;  /* Center button under the image */
+            margin: 0 10px;  /* Add some margin around the button for visual balance */
+            align-self: center;  /* Center the button vertically */
         }
     </style>
 </head>
@@ -188,14 +190,14 @@
                         document.getElementById('pdf-image').src = data.url;
 
                         // Initialize the image size to 30%
-                        pdfImageElem.style.width = '10%';  // Start with 30% size
+                        pdfImageElem.style.width = '15%';  // Start with 30% size
 
                         // Add click event listener for toggling the size
                         pdfImageElem.addEventListener('click', function () {
-                            if (pdfImageElem.style.width === '10%') {
-                                pdfImageElem.style.width = '32%';  // Switch to original size
+                            if (pdfImageElem.style.width === '15%') {
+                                pdfImageElem.style.width = '35%';  // Switch to original size
                             } else {
-                                pdfImageElem.style.width = '10%';  // Switch back to small size
+                                pdfImageElem.style.width = '15%';  // Switch back to small size
                             }
                         });
 
