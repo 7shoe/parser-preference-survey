@@ -17,7 +17,6 @@
         #pdf-image {
             width: 32%;
             margin-bottom: 20px;
-            cursor: pointer; /* Make it clear the image is clickable */
         }
         .text-box-container {
             display: flex;
@@ -147,7 +146,6 @@
         const db = firebase.firestore();
 
         let currentIndex = 0;  // Default to document with id=0
-        let isSmallImage = true;  // Tracks whether small or large image is displayed
         const userName = localStorage.getItem('username');  // Get user's name from login
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
@@ -159,28 +157,15 @@
 
         // Fetch data based on current index
         function loadDocument(index) {
-            db.collection('actual_survey_data').where('id', '==', index).get().then((querySnapshot) => {
+            db.collection('text_outputs').where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (data.text && data.text[0] && data.text[1] && data.urls) {
+                    if (data.text && data.text[0] && data.text[1] && data.url) {
                         document.getElementById('text1').innerText = data.text[0];
                         document.getElementById('text2').innerText = data.text[1];
-                        
-                        // Load smaller image initially
-                        pdfImageElem.src = data.urls[0]; 
+                        document.getElementById('pdf-image').src = data.url;
 
-                        // Add click event to toggle between small and large images
-                        pdfImageElem.addEventListener('click', function() {
-                            if (isSmallImage) {
-                                pdfImageElem.src = data.urls[1];  // Switch to large image
-                                isSmallImage = false;
-                            } else {
-                                pdfImageElem.src = data.urls[0];  // Switch back to small image
-                                isSmallImage = true;
-                            }
-                        });
-
-                        // Update the headline
+                        // headline
                         document.getElementById('survey-title').innerText = `PDF Parsing Survey: #${index + 1}`;
                     } else {
                         console.error("Error: Data fields are missing.");
@@ -265,21 +250,6 @@
             allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
             button.classList.toggle('active');  // Toggle active class for the clicked button
         }
-
-        // Highlight differences when Diff button is clicked
-        let isDiffActive = false;
-        document.getElementById('diff-btn').addEventListener('click', function() {
-            if (!isDiffActive) {
-                // Apply diff highlighting
-                applyDiffHighlight(diffs);  // Assuming diffs is fetched from Firestore as well
-                isDiffActive = true;
-            } else {
-                // Revert to normal text
-                document.getElementById('text1').innerText = text1;
-                document.getElementById('text2').innerText = text2;
-                isDiffActive = false;
-            }
-        });
     </script>
 </body>
 </html>
