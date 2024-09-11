@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preferences</title>
-    <!-- Updated button-container -->
     <style>
         body {
             background-color: #181818;
@@ -21,23 +20,22 @@
         }
         .text-box-container {
             display: flex;
-            justify-content: space-between;  /* Space items evenly */
-            align-items: center;  /* Align text areas and button vertically */
-            width: 95%;  /* Make use of nearly full width */
+            justify-content: space-between;
+            align-items: center;
+            width: 95%;
             margin-bottom: 20px;
         }
         .text-box {
-            width: 45%;  /* Width of the text box */
+            width: 45%;
             height: 600px;
             overflow: auto;
-            background-color: #333;  /* Dark background */
-            color: rgba(247, 247, 247, 0.985);  /* Text color */
+            background-color: #333;
+            color: rgba(247, 247, 247, 0.985);
             padding: 10px;
-            font-size: 16px;  /* Adjust font size */
+            font-size: 16px;
             font-family: Helvetica, Arial, sans-serif;
-            font-weight: normal;  /* Ensure the font is not bold */
-            line-height: 1.5;  /* Add more spacing between lines */
-            border: 1px solid #ccc;  /* Light border for better visibility */
+            line-height: 1.5;
+            border: 1px solid #ccc;
         }
         #diff-container {
             width: 95%;
@@ -57,37 +55,30 @@
             padding: 10px 20px;
             font-size: 16px;
         }
-
         .green-btn, .yellow-btn, .white-btn {
-            border: 4px solid #181818;  /* Same color as the background */
+            border: 4px solid #181818;
             cursor: pointer;
         }
-
         .green-btn {
             background-color: #4CAF50;
             color: white;
         }
-
         .green-btn.active {
-            border: 4px solid rgb(181, 5, 5);  /* Red border when active */
+            border: 4px solid rgb(181, 5, 5);
         }
-
         .yellow-btn {
             background-color: #FFD700;
             color: white;
         }
-
         .yellow-btn.active {
-            border: 4px solid rgb(181, 5, 5);  /* Red border when active */
+            border: 4px solid rgb(181, 5, 5);
         }
-
         .white-btn {
             background-color: white;
             color: black;
         }
-
         .white-btn.active {
-            border: 4px solid rgb(181, 5, 5);  /* Red border when active */
+            border: 4px solid rgb(181, 5, 5);
         }
         #go-back, #go-forward {
             background-color: #555;
@@ -104,20 +95,19 @@
             margin-top: 40px;
         }
         #go-back {
-            position: fixed;  /* Fixed position */
-            left: 0;          /* Stick to the bottom left */
-            bottom: 0;        /* Stick to the bottom */
+            position: fixed;
+            left: 0;
+            bottom: 0;
             padding: 10px;
             font-size: 16px;
             background-color: #555;
             color: white;
             cursor: pointer;
         }
-
         #go-forward {
-            position: fixed;  /* Fixed position */
-            right: 0;         /* Stick to the bottom right */
-            bottom: 0;        /* Stick to the bottom */
+            position: fixed;
+            right: 0;
+            bottom: 0;
             padding: 10px;
             font-size: 16px;
             background-color: #555;
@@ -125,32 +115,35 @@
             cursor: pointer;
         }
         #go-forward:disabled {
-            background-color: grey;  /* Grey out if disabled */
+            background-color: grey;
             cursor: not-allowed;
         }
         #diff-btn {
-            width: 50px;  /* Set the width */
-            height: 50px;  /* Set the height */
-            background-color: rgb(170, 163, 163);  /* Default light grey background */
-            color: black;  /* Default black font */
+            width: 50px;
+            height: 50px;
+            background-color: rgb(170, 163, 163);
+            color: black;
             cursor: pointer;
             border: none;
-            font-size: 22px;  /* Adjust font size */
+            font-size: 22px;
             margin: 0 10px;
             align-self: center;
-            display: flex;  /* Use flexbox for centering */
-            justify-content: center;  /* Center horizontally */
-            align-items: center;  /* Center vertically */
-            transition: background-color 0.3s ease, color 0.3s ease;  /* Smooth transition */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         #diff-btn.active {
-            background-color: #FFD700;  /* Yellow when clicked */
-            color: rgb(0, 0, 0);  /* White font when clicked */
+            background-color: #FFD700;
+            color: rgb(0, 0, 0);
         }
         #survey-title {
-            font-size: 18px;  /* Set the desired size here */
+            font-size: 18px;
             text-align: center;
-            font-weight: normal;  /* Remove bold */
+            font-weight: normal;
+        }
+        .highlight {
+            background-color: rgba(255, 255, 0, 0.5); /* Semi-transparent yellow */
         }
     </style>
 </head>
@@ -168,7 +161,7 @@
     </div>
     <div class="buttons">
         <button class="green-btn" id="prefer-left">I prefer this</button>
-        <button class="white-btn" id="neither">Neither</button> <!-- Updated Neither button style -->
+        <button class="white-btn" id="neither">Neither</button>
         <button class="green-btn" id="prefer-right">I prefer this</button>
     </div>
     <div class="button-container">
@@ -200,7 +193,7 @@
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
         const diffContainerElem = document.getElementById('diff-container');
-        const goForwardBtn = document.getElementById('go-forward');  // Reference to Go Forward button
+        const goForwardBtn = document.getElementById('go-forward');
 
         // Disable the "Go Forward" button initially
         goForwardBtn.disabled = true;
@@ -214,9 +207,6 @@
                         document.getElementById('text1').innerText = data.text[0];
                         document.getElementById('text2').innerText = data.text[1];
                         
-                        // Do NOT display differences in the "diff-container"
-                        // diffContainerElem.innerHTML = data.diffs.map(diff => diff.text).join('<br>');
-
                         const oldPdfImageElem = document.getElementById('pdf-image');
 
                         // Replace the old image with a new one
@@ -236,6 +226,9 @@
 
                         // Update the headline
                         document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1}`;
+
+                        // Store the diffs for later use
+                        text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
                     } else {
                         console.error("Error: Data fields are missing.");
                     }
@@ -248,22 +241,43 @@
         // Load the first document by default
         loadDocument(currentIndex);
 
-        // Add the Diff button event listener here
+        // Add the Diff button event listener
         const diffBtn = document.getElementById('diff-btn');
-
         diffBtn.addEventListener('click', function() {
-            // Toggle active class for the Diff button
             diffBtn.classList.toggle('active');
 
-            // Add your additional functionality here
             if (diffBtn.classList.contains('active')) {
-                console.log("Diff button is active: perform action");
-                // Trigger whatever action is needed when active
+                highlightCommonSubstrings();
             } else {
-                console.log("Diff button is inactive: revert action");
-                // Trigger action when inactive (optional)
+                loadDocument(currentIndex);  // Reset to the original content
             }
         });
+
+        // Highlight common substrings based on the stored diffs
+        function highlightCommonSubstrings() {
+            const diffs = JSON.parse(text1Elem.getAttribute('data-diffs'));
+
+            let highlightedText1 = '';
+            let highlightedText2 = '';
+
+            diffs.forEach((diff) => {
+                if (diff.type === 'equal') {
+                    // Highlight the common substring in both text1 and text2
+                    highlightedText1 += `<span class="highlight">${diff.text}</span>`;
+                    highlightedText2 += `<span class="highlight">${diff.text}</span>`;
+                } else if (diff.type === 'delete') {
+                    // No highlight in text1, but leave text2 unchanged
+                    highlightedText1 += diff.text;
+                } else if (diff.type === 'insert') {
+                    // No highlight in text2, but leave text1 unchanged
+                    highlightedText2 += diff.text;
+                }
+            });
+
+            // Update the text boxes with the highlighted text
+            text1Elem.innerHTML = highlightedText1;
+            text2Elem.innerHTML = highlightedText2;
+        }
 
         // Function to reset button states when navigating forward or backward
         function resetButtons() {
@@ -283,9 +297,7 @@
                 currentIndex++;
                 loadDocument(currentIndex);
                 resetButtons();  // Reset button states
-
-                // Reset the Diff button to "unclicked" state
-                diffBtn.classList.remove('active');
+                diffBtn.classList.remove('active');  // Reset the Diff button to "unclicked" state
             } else {
                 showError();
             }
@@ -296,9 +308,7 @@
                 currentIndex--;
                 loadDocument(currentIndex);
                 resetButtons();  // Reset button states
-
-                // Reset the Diff button to "unclicked" state
-                diffBtn.classList.remove('active');
+                diffBtn.classList.remove('active');  // Reset the Diff button to "unclicked" state
             }
         });
 
@@ -314,25 +324,25 @@
 
         // Enable "Go Forward" button when a choice is made
         function enableGoForward() {
-            goForwardBtn.disabled = false;  // Enable "Go Forward"
+            goForwardBtn.disabled = false;
         }
 
         document.getElementById('prefer-left').addEventListener('click', function() {
             toggleSelection(this);
             logUserChoice('left');
-            enableGoForward();  // Enable "Go Forward" after selection
+            enableGoForward();
         });
 
         document.getElementById('prefer-right').addEventListener('click', function() {
             toggleSelection(this);
             logUserChoice('right');
-            enableGoForward();  // Enable "Go Forward" after selection
+            enableGoForward();
         });
 
         document.getElementById('neither').addEventListener('click', function() {
             toggleSelection(this);
             logUserChoice('neither');
-            enableGoForward();  // Enable "Go Forward" after selection
+            enableGoForward();
         });
 
         function toggleSelection(button) {
