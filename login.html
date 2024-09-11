@@ -55,6 +55,16 @@
             color: #FFD700;  /* Gold text color */
             margin-top: 20px;
         }
+
+        /* Image blending into the background */
+        #firestore-image {
+            border-radius: 15px; /* Slightly round the corners */
+            box-shadow: 0px 0px 30px 10px rgba(0, 0, 0, 0.7); /* Create a shadow to help blend the image */
+            background: linear-gradient(180deg, transparent, darkgray); /* Gradient to blend into dark gray */
+            width: 50%;
+            height: auto;
+        }
+        
     </style>
 </head>
 <body>
@@ -62,7 +72,7 @@
         <h1>Surveying Preferences of Parser Output</h1>
 
         <!-- Display the image from Firestore -->
-        <img src="" id="firestore-image" alt="Logo Image" style="width: 50%; height: auto;">
+        <img src="" id="firestore-image" alt="Logo Image">
 
         <!-- Firestore text will be displayed here -->
         <p id="firestore-text">Loading Firestore Text...</p>
