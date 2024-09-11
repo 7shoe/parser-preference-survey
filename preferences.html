@@ -189,6 +189,7 @@
         const db = firebase.firestore();
 
         let currentIndex = 0;  // Default to document with id=0
+        const totalItems = 10; // Set the total number of items for now
         const userName = localStorage.getItem('username');  // Get user's name from login
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
@@ -239,7 +240,7 @@
         }
 
         // Load the first document by default
-        loadDocument(currentIndex);
+        loadFirstUnansweredItem();
 
         // Add the Diff button event listener
         const diffBtn = document.getElementById('diff-btn');
@@ -279,6 +280,22 @@
             text2Elem.innerHTML = highlightedText2;
         }
 
+        // Log user choice in Firestore
+        function logUserChoice(choice) {
+            const docId = `user_${userName}_item_${currentIndex}`; // Unique ID based on user and item
+            
+            db.collection('user_preferences').doc(docId).set({
+                userName: userName,
+                choice: choice,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                documentIndex: currentIndex
+            }).then(() => {
+                console.log("User preference saved:", choice);
+            }).catch((error) => {
+                console.error("Error saving preference:", error);
+            });
+        }
+
         // Function to reset button states when navigating forward or backward
         function resetButtons() {
             const allButtons = document.querySelectorAll('.green-btn, .white-btn');
@@ -291,15 +308,37 @@
             alert(`I'm sorry, ${userName}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.`);
         }
 
-        // Call resetButtons when navigating forward or backward
+        // Load the first unanswered item for the current user
+        function loadFirstUnansweredItem() {
+            db.collection('user_preferences').where('userName', '==', userName).get()
+            .then((querySnapshot) => {
+                let answeredItems = [];
+                querySnapshot.forEach((doc) => {
+                    answeredItems.push(doc.data().documentIndex);
+                });
+
+                // Find the first unanswered item
+                for (let i = 0; i < totalItems; i++) {
+                    if (!answeredItems.includes(i)) {
+                        currentIndex = i;
+                        loadDocument(currentIndex);
+                        break;
+                    }
+                }
+            }).catch((error) => {
+                console.error("Error loading unanswered items:", error);
+            });
+        }
+
+        // Go Forward and Backward functionality
         document.getElementById('go-forward').addEventListener('click', () => {
-            if (!goForwardBtn.disabled) {
+            if (currentIndex < totalItems - 1) {
                 currentIndex++;
                 loadDocument(currentIndex);
-                resetButtons();  // Reset button states
+                resetButtons();
                 diffBtn.classList.remove('active');  // Reset the Diff button to "unclicked" state
             } else {
-                showError();
+                alert("You have reached the end of the line. Please come back in a bit.");
             }
         });
 
@@ -307,20 +346,10 @@
             if (currentIndex > 0) {
                 currentIndex--;
                 loadDocument(currentIndex);
-                resetButtons();  // Reset button states
+                resetButtons();
                 diffBtn.classList.remove('active');  // Reset the Diff button to "unclicked" state
             }
         });
-
-        // Logging user choices
-        function logUserChoice(choice) {
-            db.collection('user_choices').add({
-                userName: userName,
-                choice: choice,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                documentIndex: currentIndex
-            });
-        }
 
         // Enable "Go Forward" button when a choice is made
         function enableGoForward() {
@@ -351,104 +380,21 @@
             button.classList.toggle('active');  // Toggle active class for the clicked button
         }
 
-        // Keystroke listener -> quicker navigation
+        // Keyboard navigation for quicker interactions
         document.addEventListener('keydown', function(event) {
-            // Capture arrow key presses and trigger respective button actions
             if (event.key === 'ArrowLeft') {
-                // Left Arrow = prefer left and go forward
                 document.getElementById('prefer-left').click();
                 setTimeout(() => document.getElementById('go-forward').click(), 200);
             } else if (event.key === 'ArrowRight') {
-                // Right Arrow = prefer right and go forward
                 document.getElementById('prefer-right').click();
                 setTimeout(() => document.getElementById('go-forward').click(), 200);
             } else if (event.key === 'ArrowDown') {
-                // Down Arrow = neither and go forward
                 document.getElementById('neither').click();
                 setTimeout(() => document.getElementById('go-forward').click(), 200);
             } else if (event.key === 'ArrowUp') {
-                // Up Arrow = toggle image size
-                const imgElem = document.getElementById('pdf-image');
-                imgElem.click(); // Simulate image click
+                document.getElementById('pdf-image').click(); // Toggle image size
             }
         });
-
-        // log user preferences
-        function logUserChoice(choice) {
-            const userName = localStorage.getItem('username');
-            const docId = `user_${userName}_item_${currentIndex}`; // Unique ID based on user and item
-            
-            db.collection('user_preferences').doc(docId).set({
-                userName: userName,
-                choice: choice,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                documentIndex: currentIndex
-            }).then(() => {
-                console.log("User preference saved:", choice);
-            }).catch((error) => {
-                console.error("Error saving preference:", error);
-            });
-        }
-
-        // Updated event listeners to track preferences
-        document.getElementById('prefer-left').addEventListener('click', function() {
-            toggleSelection(this);
-            logUserChoice('left');
-            enableGoForward();
-        });
-
-        document.getElementById('prefer-right').addEventListener('click', function() {
-            toggleSelection(this);
-            logUserChoice('right');
-            enableGoForward();
-        });
-
-        document.getElementById('neither').addEventListener('click', function() {
-            toggleSelection(this);
-            logUserChoice('neither');
-            enableGoForward();
-        });
-
-        // forward user to un-picked preferences
-        function loadFirstUnansweredItem() {
-            const userName = localStorage.getItem('username');
-            
-            db.collection('user_preferences').where('userName', '==', userName).get()
-            .then((querySnapshot) => {
-                let answeredItems = [];
-                querySnapshot.forEach((doc) => {
-                    answeredItems.push(doc.data().documentIndex);
-                });
-
-                // Find the first unanswered item
-                for (let i = 0; i < totalItems; i++) {
-                    if (!answeredItems.includes(i)) {
-                        currentIndex = i;
-                        loadDocument(currentIndex); // Load the first unanswered document
-                        break;
-                    }
-                }
-            }).catch((error) => {
-                console.error("Error loading unanswered items:", error);
-            });
-        }
-
-        // end of line message
-        document.getElementById('go-forward').addEventListener('click', () => {
-            if (currentIndex < totalItems - 1) {
-                currentIndex++;
-                loadDocument(currentIndex);
-                resetButtons();
-                diffBtn.classList.remove('active');
-            } else {
-                alert("You have reached the end of the line. Please come back in a bit.");
-            }
-        });
-
-        // Call this function on page load
-        window.onload = function() {
-            loadFirstUnansweredItem();
-        };
     </script>
 </body>
 </html>
