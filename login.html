@@ -135,7 +135,7 @@
                     // Username exists, check the password
                     querySnapshot.forEach((doc) => {
                         const userData = doc.data();
-                        if (userData.pass === password) {  // Note the change from 'userpassword' to 'pass'
+                        if (userData.pass === pass) {  // Note the change from 'userpassword' to 'pass'
                             // Username and password match, redirect to preferences.html
                             localStorage.setItem('username', username);
                             window.location.href = 'preferences.html';
