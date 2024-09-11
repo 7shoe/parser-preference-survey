@@ -350,6 +350,28 @@
             allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
             button.classList.toggle('active');  // Toggle active class for the clicked button
         }
+
+        // Keystroke listener -> quicker navigation
+        document.addEventListener('keydown', function(event) {
+            // Capture arrow key presses and trigger respective button actions
+            if (event.key === 'ArrowLeft') {
+                // Left Arrow = prefer left and go forward
+                document.getElementById('prefer-left').click();
+                setTimeout(() => document.getElementById('go-forward').click(), 200);
+            } else if (event.key === 'ArrowRight') {
+                // Right Arrow = prefer right and go forward
+                document.getElementById('prefer-right').click();
+                setTimeout(() => document.getElementById('go-forward').click(), 200);
+            } else if (event.key === 'ArrowDown') {
+                // Down Arrow = neither and go forward
+                document.getElementById('neither').click();
+                setTimeout(() => document.getElementById('go-forward').click(), 200);
+            } else if (event.key === 'ArrowUp') {
+                // Up Arrow = toggle image size
+                const imgElem = document.getElementById('pdf-image');
+                imgElem.click(); // Simulate image click
+            }
+        });
     </script>
 </body>
 </html>
