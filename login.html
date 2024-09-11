@@ -63,7 +63,7 @@
         <h1>Surveying Preferences of Parser Output</h1>
 
         <!-- Display the image from Firestore -->
-        <img src="" id="firestore-image" alt="Logo Image" style="width: 80%; height: auto;">
+        <img src="" id="firestore-image" alt="Logo Image" style="width: 50%; height: auto;">
 
         <!-- Firestore text will be displayed here -->
         <p id="firestore-text">Loading Firestore Text...</p>
@@ -126,7 +126,7 @@
             const password = document.getElementById('password').value;
 
             // Query the Firestore users collection to check if the username exists
-            db.collection('users').where('username', '==', username).get()
+            db.collection('users').where('name', '==', username).get()  // Note the change from 'username' to 'name'
             .then((querySnapshot) => {
                 if (querySnapshot.empty) {
                     // Username not found
@@ -135,7 +135,7 @@
                     // Username exists, check the password
                     querySnapshot.forEach((doc) => {
                         const userData = doc.data();
-                        if (userData.userpassword === password) {
+                        if (userData.pass === password) {  // Note the change from 'userpassword' to 'pass'
                             // Username and password match, redirect to preferences.html
                             localStorage.setItem('username', username);
                             window.location.href = 'preferences.html';
