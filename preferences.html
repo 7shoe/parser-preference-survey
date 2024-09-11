@@ -189,7 +189,6 @@
         const db = firebase.firestore();
 
         let currentIndex = 0;  // Default to document with id=0
-        const totalItems = 10; // Set the total number of items for now
         const userName = localStorage.getItem('username');  // Get user's name from login
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
@@ -201,46 +200,59 @@
 
         // Fetch data based on current index
         function loadDocument(index) {
-            db.collection('four_sample_imgs').where('id', '==', index).get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if (data.text && data.text[0] && data.text[1] && data.url && data.diffs) {
-                        document.getElementById('text1').innerText = data.text[0];
-                        document.getElementById('text2').innerText = data.text[1];
-                        
-                        const oldPdfImageElem = document.getElementById('pdf-image');
+            return new Promise((resolve, reject) => {
+                db.collection('four_sample_imgs').where('id', '==', index).get().then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        if (data.text && data.text[0] && data.text[1] && data.url && data.diffs) {
+                            document.getElementById('text1').innerText = data.text[0];
+                            document.getElementById('text2').innerText = data.text[1];
+                            
+                            const oldPdfImageElem = document.getElementById('pdf-image');
 
-                        // Replace the old image with a new one
-                        const newPdfImageElem = oldPdfImageElem.cloneNode(true);
-                        newPdfImageElem.src = data.url;
-                        newPdfImageElem.style.width = '13%';  // Start with the small size
-                        oldPdfImageElem.replaceWith(newPdfImageElem);
+                            // Replace the old image with a new one
+                            const newPdfImageElem = oldPdfImageElem.cloneNode(true);
+                            newPdfImageElem.src = data.url;
+                            newPdfImageElem.style.width = '13%';  // Start with the small size
+                            oldPdfImageElem.replaceWith(newPdfImageElem);
 
-                        // Add click event listener for toggling the size of the new image
-                        newPdfImageElem.addEventListener('click', function () {
-                            if (newPdfImageElem.style.width === '13%') {
-                                newPdfImageElem.style.width = '32%';  // Switch to original size
-                            } else {
-                                newPdfImageElem.style.width = '13%';  // Switch back to small size
-                            }
-                        });
+                            // Add click event listener for toggling the size of the new image
+                            newPdfImageElem.addEventListener('click', function () {
+                                if (newPdfImageElem.style.width === '13%') {
+                                    newPdfImageElem.style.width = '32%';  // Switch to original size
+                                } else {
+                                    newPdfImageElem.style.width = '13%';  // Switch back to small size
+                                }
+                            });
 
-                        // Update the headline
-                        document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1}`;
+                            // Update the headline
+                            document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1}`;
 
-                        // Store the diffs for later use
-                        text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
-                    } else {
-                        console.error("Error: Data fields are missing.");
-                    }
+                            // Store the diffs for later use
+                            text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
+
+                            resolve();  // Indicate that loading is complete
+                        } else {
+                            console.error("Error: Data fields are missing.");
+                            reject();
+                        }
+                    });
+                }).catch((error) => {
+                    console.error("Error retrieving data from Firestore:", error);
+                    reject(error);
                 });
-            }).catch((error) => {
-                console.error("Error retrieving data from Firestore:", error);
             });
         }
 
         // Load the first document by default
         loadFirstUnansweredItem();
+
+        // Ensure first document loads before interaction
+        function loadFirstUnansweredItem() {
+            loadDocument(currentIndex)
+                .then(() => console.log("First document loaded"))
+                .catch((error) => console.error("Failed to load the first document", error));
+        }
 
         // Add the Diff button event listener
         const diffBtn = document.getElementById('diff-btn');
@@ -392,7 +404,7 @@
                 document.getElementById('neither').click();
                 setTimeout(() => document.getElementById('go-forward').click(), 200);
             } else if (event.key === 'ArrowUp') {
-                document.getElementById('pdf-image').click(); // Toggle image size
+                document.querySelector('img').click();  // Toggle image size
             }
         });
     </script>
