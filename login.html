@@ -80,7 +80,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // Your Firebase configuration (this is the one you provided)
+        // Your Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCcyCr0ZC1doZK1W1zc0QMfPVsP__81mhI",
             authDomain: "parser-output-survey.firebaseapp.com",
@@ -90,47 +90,43 @@
             appId: "1:187427222726:web:50d39367fb95b78cdcd3c7",
             measurementId: "G-FLKV3XGQ1M"
         };
-
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-
-        // Fetch the first document in the text_outputs collection and display its text[0]
-        function fetchFirestoreText() {
-            db.collection('text_outputs').doc('Fmze8d48pG5qOoM08e47').get()
-                .then((doc) => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        // Display the URL (for debugging)
-                        document.getElementById('firestore-text').innerText = data.url;
-                        // Set the image source
-                        document.getElementById('firestore-image').src = data.url; 
-                    } else {
-                        console.log("No such document!");
-                        document.getElementById('firestore-text').innerText = "Still no text found :-(";
-                    }
-                })
-                .catch((error) => {
-                    console.log("Error getting document:", error);
-                    document.getElementById('firestore-text').innerText = "Error loading text!";
-                });
-        }
-
-        // Call the function to fetch Firestore data when the page loads
-        window.onload = fetchFirestoreText;
-
+        
         // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', function(event) {
-            event.preventDefault();  // Prevent form submission (no page reload)
-
-            // Get the entered username
+            event.preventDefault(); // Prevent the form from submitting and reloading the page
+        
+            // Get the entered username and password
             const username = document.getElementById('username').value;
-
-            // Store username in localStorage
-            localStorage.setItem('username', username);
-
-            // Redirect to preferences page
-            window.location.href = 'preferences.html';
+            const password = prompt("Please enter your password:");
+        
+            // Query the Firestore users collection to check if the username exists
+            db.collection('users').where('username', '==', username).get()
+            .then((querySnapshot) => {
+                if (querySnapshot.empty) {
+                    // Username not found
+                    alert("Username unknown, please contact siebenschuh@uchicago.edu");
+                } else {
+                    // Username exists, check the password
+                    querySnapshot.forEach((doc) => {
+                        const userData = doc.data();
+                        if (userData.userpassword === password) {
+                            // Username and password match, redirect to preferences.html
+                            localStorage.setItem('username', username);
+                            window.location.href = 'preferences.html';
+                        } else {
+                            // Username is correct but password is wrong
+                            alert("Username known but password is false");
+                        }
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error("Error retrieving document: ", error);
+                alert("An error occurred while verifying your login. Please try again.");
+            });
         });
     </script>
 </body>
