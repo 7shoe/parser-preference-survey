@@ -117,7 +117,7 @@
         // call the function to fetch Firestore image when the page loads
         window.onload = fetchFirestoreImage;
 
-        // handle login form submission
+        // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent the form from submitting and reloading the page
 
@@ -125,9 +125,13 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
+            console.log("Entered Username:", username);  // Debugging: log entered username
+
             // Query the Firestore users collection to check if the username exists
-            db.collection('users').where('user', '==', username).get()  // Changed to query 'user' field instead of 'name'
+            db.collection('users').where('user', '==', username).get()  // Ensure the query is correct
             .then((querySnapshot) => {
+                console.log("Query Snapshot Size:", querySnapshot.size);  // Debugging: log snapshot size
+
                 if (querySnapshot.empty) {
                     // Username not found
                     alert("Username unknown, please contact siebenschuh@uchicago.edu");
@@ -135,6 +139,8 @@
                     // Username exists, check the password
                     querySnapshot.forEach((doc) => {
                         const userData = doc.data();
+                        console.log("Firestore Data for User:", userData);  // Debugging: log user data
+
                         if (userData.pass === password) {  // Compare with 'pass' field
                             // Username and password match, redirect to preferences.html
                             localStorage.setItem('username', username);
