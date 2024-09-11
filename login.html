@@ -114,10 +114,10 @@
             });
         }
 
-        // Call the function to fetch Firestore image when the page loads
+        // call the function to fetch Firestore image when the page loads
         window.onload = fetchFirestoreImage;
 
-        // Handle login form submission
+        // handle login form submission
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent the form from submitting and reloading the page
 
@@ -126,7 +126,7 @@
             const password = document.getElementById('password').value;
 
             // Query the Firestore users collection to check if the username exists
-            db.collection('users').where('name', '==', username).get()  // Note the change from 'username' to 'name'
+            db.collection('users').where('user', '==', username).get()  // Changed to query 'user' field instead of 'name'
             .then((querySnapshot) => {
                 if (querySnapshot.empty) {
                     // Username not found
@@ -135,7 +135,7 @@
                     // Username exists, check the password
                     querySnapshot.forEach((doc) => {
                         const userData = doc.data();
-                        if (userData.pass === pass) {  // Note the change from 'userpassword' to 'pass'
+                        if (userData.pass === password) {  // Compare with 'pass' field
                             // Username and password match, redirect to preferences.html
                             localStorage.setItem('username', username);
                             window.location.href = 'preferences.html';
