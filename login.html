@@ -27,7 +27,7 @@
             font-size: 20px;
             color: #f1f1f1;
         }
-        input[type="text"] {
+        input[type="text"], input[type="password"] {
             font-size: 18px;
             padding: 10px;
             border: none;
@@ -62,15 +62,16 @@
     <div class="login-container">
         <h1>Surveying Preferences of Parser Output</h1>
 
+        <!-- Display the image from Firestore -->
+        <img src="" id="firestore-image" alt="Logo Image" style="width: 80%; height: auto;">
+
         <!-- Firestore text will be displayed here -->
         <p id="firestore-text">Loading Firestore Text...</p>
 
-        <!-- Display the image -->
-        <img src="" id="firestore-image" alt="Image from Google Drive">
-
-        <p>Please enter your first name below:</p>
+        <!-- Username and Password fields -->
         <form id="loginForm">
-            <input type="text" id="username" name="username" placeholder="Enter your name" required><br><br>
+            <input type="text" id="username" name="username" placeholder="Enter username" required><br><br>
+            <input type="password" id="password" name="password" placeholder="Enter password" required><br><br>
             <button type="submit">Submit</button>
         </form>
     </div>
@@ -94,14 +95,36 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         
+        // Fetch the logo image from Firestore and display it
+        function fetchFirestoreImage() {
+            db.collection('login_page').doc('item0').get()
+            .then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Set the image source from the 'logo' field
+                    document.getElementById('firestore-image').src = data.logo;
+                } else {
+                    console.log("No such document!");
+                    document.getElementById('firestore-text').innerText = "No image found!";
+                }
+            })
+            .catch((error) => {
+                console.error("Error getting document:", error);
+                document.getElementById('firestore-text').innerText = "Error loading image!";
+            });
+        }
+
+        // Call the function to fetch Firestore image when the page loads
+        window.onload = fetchFirestoreImage;
+
         // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent the form from submitting and reloading the page
-        
+
             // Get the entered username and password
             const username = document.getElementById('username').value;
-            const password = prompt("Please enter your password:");
-        
+            const password = document.getElementById('password').value;
+
             // Query the Firestore users collection to check if the username exists
             db.collection('users').where('username', '==', username).get()
             .then((querySnapshot) => {
