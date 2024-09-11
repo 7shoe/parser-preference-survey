@@ -58,7 +58,6 @@
     </style>
 </head>
 <body>
-    <!-- Your website content goes here -->
     <div class="login-container">
         <h1>Surveying Preferences of Parser Output</h1>
 
@@ -101,7 +100,6 @@
             .then((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
-                    // Set the image source from the 'logo' field
                     document.getElementById('firestore-image').src = data.logo;
                 } else {
                     console.log("No such document!");
@@ -114,7 +112,7 @@
             });
         }
 
-        // call the function to fetch Firestore image when the page loads
+        // Call the function to fetch Firestore image when the page loads
         window.onload = fetchFirestoreImage;
 
         // Handle login form submission
@@ -128,7 +126,7 @@
             console.log("Entered Username:", username);  // Debugging: log entered username
 
             // Query the Firestore users collection to check if the username exists
-            db.collection('users').where('user', '==', username).get()  // Ensure the query is correct
+            db.collection('users').where('name', '==', username).get()  // Query using 'name' field
             .then((querySnapshot) => {
                 console.log("Query Snapshot Size:", querySnapshot.size);  // Debugging: log snapshot size
 
@@ -141,7 +139,8 @@
                         const userData = doc.data();
                         console.log("Firestore Data for User:", userData);  // Debugging: log user data
 
-                        if (userData.pass === password) {  // Compare with 'pass' field
+                        // Check if the password matches
+                        if (userData.pass === password) {
                             // Username and password match, redirect to preferences.html
                             localStorage.setItem('username', username);
                             window.location.href = 'preferences.html';
