@@ -297,6 +297,9 @@
 
                         // Store the diffs for later use
                         text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
+
+                        // Show or hide buttons based on currentIndex
+                        toggleButtonVisibility();
                     } else {
                         console.error("Error: Data fields are missing.");
                     }
@@ -304,6 +307,26 @@
             }).catch((error) => {
                 console.error("Error retrieving data from Firestore:", error);
             });
+        }
+
+        // Function to show or hide the "Go Forward" and "Go Backward" buttons
+        function toggleButtonVisibility() {
+            const goForwardBtn = document.getElementById('go-forward');
+            const goBackBtn = document.getElementById('go-back');
+
+            // Hide "Go Forward" if at the last item, otherwise show it
+            if (currentIndex >= totalItems - 1) {
+                goForwardBtn.style.visibility = 'hidden';
+            } else {
+                goForwardBtn.style.visibility = 'visible';
+            }
+
+            // Hide "Go Back" if at the first item, otherwise show it
+            if (currentIndex <= 0) {
+                goBackBtn.style.visibility = 'hidden';
+            } else {
+                goBackBtn.style.visibility = 'visible';
+            }
         }
 
         // Load the first document by default
@@ -359,12 +382,6 @@
 
         // Handle the "Go Forward" button click event
         document.getElementById('go-forward').addEventListener('click', () => {
-            // Ensure `totalItems` is set before proceeding
-            if (typeof totalItems === 'undefined' || totalItems === 0) {
-                console.error("Total items not set.");
-                return;
-            }
-
             if (currentIndex < totalItems - 1) {
                 currentIndex++;
                 loadDocument(currentIndex);
@@ -376,6 +393,9 @@
                 } else {
                     diffBtn.classList.remove('active');
                 }
+
+                // Update button visibility after navigation
+                toggleButtonVisibility();
             } else {
                 showEndOfLineModal();  // Show the modal when reaching the last item
             }
@@ -395,6 +415,9 @@
                 } else {
                     diffBtn.classList.remove('active');
                 }
+
+                // Update button visibility after navigation
+                toggleButtonVisibility();
             }
         });
 
