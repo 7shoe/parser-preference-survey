@@ -524,6 +524,10 @@
             const modal = document.getElementById('endOfLineModal');
             const closeBtn = document.querySelector('.close-btn');
 
+            // Forward button always visible
+            const goForwardBtn = document.getElementById('go-forward');
+            goForwardBtn.style.visibility = 'visible'; // Make sure "Go Forward" is visible when page loads
+
             if (modal && closeBtn) {
                 closeBtn.onclick = function() {
                     modal.style.display = "none";
