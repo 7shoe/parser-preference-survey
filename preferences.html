@@ -314,11 +314,18 @@
 
         // Logging user choices
         function logUserChoice(choice) {
-            db.collection('user_choices').add({
-                userName: userName,
-                choice: choice,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                documentIndex: currentIndex
+            const userName = localStorage.getItem('username');  // Get the logged-in username
+            const docId = `user_${userName}_pair_${currentIndex}`;  // Create a unique document ID for each user's preference
+
+            db.collection('user_preferences').doc(docId).set({
+                userName: userName,  // Store the username
+                choice: choice,  // The choice the user made ('left', 'right', 'neither')
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),  // Log the timestamp
+                pairIndex: currentIndex  // Log the index of the current pair
+            }).then(() => {
+                console.log("User preference logged:", choice);  // Log success to the console
+            }).catch((error) => {
+                console.error("Error logging preference:", error);  // Log any errors
             });
         }
 
@@ -328,9 +335,9 @@
         }
 
         document.getElementById('prefer-left').addEventListener('click', function() {
-            toggleSelection(this);
-            logUserChoice('left');
-            enableGoForward();
+            toggleSelection(this);  // Visually mark the button as selected
+            logUserChoice('left');  // Log the user's choice as 'left'
+            enableGoForward();      // Enable the Go Forward button
         });
 
         document.getElementById('prefer-right').addEventListener('click', function() {
