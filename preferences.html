@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preferences</title>
     <style>
@@ -147,41 +147,44 @@
         }
         /* The Modal (background) */
         .modal {
-        display: none; /* Hidden by default */
-        position: fixed;
-        z-index: 1; /* Sit on top */
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5); /* Black background with transparency */
-    }
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Black background with transparency */
+        }
 
-    /* Modal Content */
-    .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 400px;
-        text-align: center;
-    }
+        /* Modal Content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            transform: translateY(-50%);
+            top: 50%;
+            position: relative;
+        }
 
-    /* Close Button */
-    .close-btn {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-    }
+        /* Close Button */
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
 
-    .close-btn:hover,
-    .close-btn:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -209,7 +212,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script> <!-- Add auth SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
 
     <script>
         // Initialize Firebase
@@ -229,36 +232,48 @@
 
         // check if a user is logged in
         let currentUser = null;
-        // -> if not, fore authentication
+        let diffBtnActive = false;
+        let totalItems = 0;  // To track the number of items
+
         auth.onAuthStateChanged(function(user) {
             if (user) {
                 currentUser = user;  // Get the current authenticated user
                 console.log("User logged in: ", user.email);
+
+                // Fetch total items count from Firestore
+                db.collection('four_sample_imgs').get().then((querySnapshot) => {
+                    totalItems = querySnapshot.size;  // Set totalItems to the number of documents
+                });
+
+                // Load the first unanswered item once the user is authenticated
+                loadFirstUnansweredItem();
             } else {
                 window.location.href = 'login.html';  // Redirect to login if no user is logged in
             }
         });
 
         let currentIndex = 0;  // Default to document with id=0
-        //const userName = localStorage.getItem('username');  // Get user's name from login
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
-        const diffContainerElem = document.getElementById('diff-container');
         const goForwardBtn = document.getElementById('go-forward');
-        
 
         // Disable the "Go Forward" button initially
         goForwardBtn.disabled = true;
 
         // Fetch data based on current index
+        let originalText1 = '';
+        let originalText2 = '';
+
         function loadDocument(index) {
             db.collection('four_sample_imgs').where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     if (data.text && data.text[0] && data.text[1] && data.url && data.diffs) {
-                        document.getElementById('text1').innerText = data.text[0];
-                        document.getElementById('text2').innerText = data.text[1];
-                        
+                        originalText1 = data.text[0];
+                        originalText2 = data.text[1];
+                        text1Elem.innerText = originalText1;
+                        text2Elem.innerText = originalText2;
+
                         const oldPdfImageElem = document.getElementById('pdf-image');
 
                         // Replace the old image with a new one
@@ -290,22 +305,24 @@
             });
         }
 
-        // load the first document by default
+        // Load the first document by default
         loadDocument(currentIndex);
 
-        // add the Diff button event listener
+        // Diff button event listener
         const diffBtn = document.getElementById('diff-btn');
         diffBtn.addEventListener('click', function() {
             diffBtn.classList.toggle('active');
+            diffBtnActive = diffBtn.classList.contains('active');
 
-            if (diffBtn.classList.contains('active')) {
+            if (diffBtnActive) {
                 highlightCommonSubstrings();
             } else {
-                loadDocument(currentIndex);  // reset to the original content
+                text1Elem.innerText = originalText1;  // Reset directly
+                text2Elem.innerText = originalText2;
             }
         });
 
-        // highlight common substrings based on the stored diffs
+        // Highlight common substrings based on the stored diffs
         function highlightCommonSubstrings() {
             const diffs = JSON.parse(text1Elem.getAttribute('data-diffs'));
 
@@ -314,24 +331,20 @@
 
             diffs.forEach((diff) => {
                 if (diff.type === 'equal') {
-                    // Highlight the common substring in both text1 and text2
                     highlightedText1 += `<span class="highlight">${diff.text}</span>`;
                     highlightedText2 += `<span class="highlight">${diff.text}</span>`;
                 } else if (diff.type === 'delete') {
-                    // No highlight in text1, but leave text2 unchanged
                     highlightedText1 += diff.text;
                 } else if (diff.type === 'insert') {
-                    // No highlight in text2, but leave text1 unchanged
                     highlightedText2 += diff.text;
                 }
             });
 
-            // Update the text boxes with the highlighted text
             text1Elem.innerHTML = highlightedText1;
             text2Elem.innerHTML = highlightedText2;
         }
 
-        // function to reset button states when navigating forward or backward
+        // Function to reset button states when navigating forward or backward
         function resetButtons() {
             const allButtons = document.querySelectorAll('.green-btn, .white-btn');
             allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
@@ -340,27 +353,40 @@
 
         // Function to show an error message if "Go Forward" is clicked when disabled
         function showError() {
-            alert(`I'm sorry, ${userName}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.`);
+            alert(`I'm sorry, ${currentUser.email}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.`);
         }
 
-        // Call resetButtons when navigating forward or backward
+        // Handle the "Go Forward" button click event
         document.getElementById('go-forward').addEventListener('click', () => {
-            if (!goForwardBtn.disabled) {
+            if (currentIndex < totalItems - 1) {
                 currentIndex++;
                 loadDocument(currentIndex);
-                resetButtons();  // Reset button states
-                diffBtn.classList.remove('active');  // Reset the Diff button to "unclicked" state
+                resetButtons();
+
+                if (diffBtnActive) {
+                    diffBtn.classList.add('active');
+                    highlightCommonSubstrings();
+                } else {
+                    diffBtn.classList.remove('active');
+                }
             } else {
-                showError();
+                showEndOfLineModal();
             }
         });
 
+        // Handle the "Go Back" button click event
         document.getElementById('go-back').addEventListener('click', () => {
             if (currentIndex > 0) {
                 currentIndex--;
                 loadDocument(currentIndex);
-                resetButtons();  // Reset button states
-                diffBtn.classList.remove('active');  // Reset the Diff button to "unclicked" state
+                resetButtons();
+
+                if (diffBtnActive) {
+                    diffBtn.classList.add('active');
+                    highlightCommonSubstrings();
+                } else {
+                    diffBtn.classList.remove('active');
+                }
             }
         });
 
@@ -385,10 +411,11 @@
             goForwardBtn.disabled = false;
         }
 
+        // Event listeners for preference buttons
         document.getElementById('prefer-left').addEventListener('click', function() {
-            toggleSelection(this);  // Visually mark the button as selected
-            logUserChoice('left');  // Log the user's choice as 'left'
-            enableGoForward();      // Enable the Go Forward button
+            toggleSelection(this);
+            logUserChoice('left');
+            enableGoForward();
         });
 
         document.getElementById('prefer-right').addEventListener('click', function() {
@@ -405,51 +432,42 @@
 
         function toggleSelection(button) {
             const allButtons = document.querySelectorAll('.green-btn, .white-btn');
-            allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
-            button.classList.toggle('active');  // Toggle active class for the clicked button
+            allButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.toggle('active');
         }
 
         // Keystroke listener -> quicker navigation
         document.addEventListener('keydown', function(event) {
-            // Capture arrow key presses and trigger respective button actions
             if (event.key === 'ArrowLeft') {
-                // Left Arrow = prefer left and go forward
                 document.getElementById('prefer-left').click();
                 setTimeout(() => document.getElementById('go-forward').click(), 200);
             } else if (event.key === 'ArrowRight') {
-                // Right Arrow = prefer right and go forward
                 document.getElementById('prefer-right').click();
                 setTimeout(() => document.getElementById('go-forward').click(), 200);
             } else if (event.key === 'ArrowDown') {
-                // Down Arrow = neither and go forward
                 document.getElementById('neither').click();
                 setTimeout(() => document.getElementById('go-forward').click(), 200);
             } else if (event.key === 'ArrowUp') {
-                // Up Arrow = toggle image size
-                const imgElem = document.getElementById('pdf-image');
-                imgElem.click(); // Simulate image click
+                document.getElementById('pdf-image').click();
             }
         });
 
-        // forward user to un-picked preferences
+        // Forward user to un-picked preferences
         function loadFirstUnansweredItem() {
-            // Ensure the user is authenticated
             if (currentUser) {
-                const userEmail = currentUser.email; // Use the authenticated user's email (or use currentUser.uid for the user ID)
+                const userEmail = currentUser.email;
                 
-                // Query Firestore for the user's answered items
                 db.collection('user_preferences').where('userName', '==', userEmail).get()
                 .then((querySnapshot) => {
                     let answeredItems = [];
                     querySnapshot.forEach((doc) => {
-                        answeredItems.push(doc.data().pairIndex);  // Collect the indices of answered pairs
+                        answeredItems.push(doc.data().pairIndex);
                     });
 
-                    // Find the first unanswered item by checking against total items
                     for (let i = 0; i < totalItems; i++) {
                         if (!answeredItems.includes(i)) {
                             currentIndex = i;
-                            loadDocument(currentIndex);  // Load the first unanswered document
+                            loadDocument(currentIndex);
                             break;
                         }
                     }
@@ -458,46 +476,28 @@
                 });
             } else {
                 console.error("No user authenticated.");
-                window.location.href = 'login.html';  // Redirect to login if no user is authenticated
+                window.location.href = 'login.html';
             }
         }
+
+        // End of Line Modal
+        const modal = document.getElementById('endOfLineModal');
+        const closeBtn = document.querySelector('.close-btn');
+
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+        };
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
 
         // Show the "End of Line" modal when no more items are available
         function showEndOfLineModal() {
-            const modal = document.getElementById('endOfLineModal');
-            modal.style.display = "block";  // Show the modal
-
-            // Close the modal when the close button (X) is clicked
-            const closeBtn = document.querySelector('.close-btn');
-            closeBtn.onclick = function() {
-                modal.style.display = "none";
-            };
-
-            // Close the modal if the user clicks anywhere outside the modal
-            window.onclick = function(event) {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                }
-            };
+            modal.style.display = "block";
         }
-
-        // handle the "Go Forward" button click event
-        document.getElementById('go-forward').addEventListener('click', () => {
-            if (currentIndex < totalItems - 1) {
-                currentIndex++;
-                loadDocument(currentIndex);
-                resetButtons();
-                diffBtn.classList.remove('active');
-            } else {
-                // Show modal when end of the collection is reached
-                showEndOfLineModal();
-            }
-        });
-
-        // call this function on page load
-        window.onload = function() {
-            loadFirstUnansweredItem();
-        };
     </script>
 
 <!-- End of Line Modal -->
