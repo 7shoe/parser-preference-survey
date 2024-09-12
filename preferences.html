@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preferences</title>
     <style>
@@ -118,9 +118,6 @@
             background-color: grey;
             cursor: not-allowed;
         }
-        #go-forward.hidden {
-            display: none;
-        }
         #diff-btn {
             width: 50px;
             height: 50px;
@@ -220,19 +217,20 @@
     <script>
         // Initialize Firebase
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID",
-            measurementId: "YOUR_MEASUREMENT_ID"
+            apiKey: "AIzaSyCcyCr0ZC1doZK1W1zc0QMfPVsP__81mhI",
+            authDomain: "parser-output-survey.firebaseapp.com",
+            projectId: "parser-output-survey",
+            storageBucket: "parser-output-survey.appspot.com",
+            messagingSenderId: "187427222726",
+            appId: "1:187427222726:web:50d39367fb95b78cdcd3c7",
+            measurementId: "G-FLKV3XGQ1M"
         };
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();         // init Firebase auth
 
+        // check if a user is logged in
         let currentUser = null;
         let diffBtnActive = false;
         let totalItems = 0;  // To track the number of items
@@ -244,7 +242,7 @@
 
                 // fetch total items count from Firestore
                 db.collection('four_sample_imgs').get().then((querySnapshot) => {
-                    totalItems = querySnapshot.size;
+                    totalItems = querySnapshot.size;  // Set totalItems to the number of documents
                     loadFirstUnansweredItem();  // Only proceed after totalItems is assigned
                 }).catch((error) => {
                     console.error("Error retrieving total items:", error);
@@ -253,6 +251,7 @@
                 window.location.href = 'login.html';  // Redirect to login if no user is logged in
             }
         });
+
 
         let currentIndex = 0;  // Default to document with id=0
         const text1Elem = document.getElementById('text1');
@@ -278,20 +277,25 @@
 
                         const oldPdfImageElem = document.getElementById('pdf-image');
 
+                        // Replace the old image with a new one
                         const newPdfImageElem = oldPdfImageElem.cloneNode(true);
                         newPdfImageElem.src = data.url;
                         newPdfImageElem.style.width = '13%';  // Start with the small size
                         oldPdfImageElem.replaceWith(newPdfImageElem);
 
+                        // Add click event listener for toggling the size of the new image
                         newPdfImageElem.addEventListener('click', function () {
                             if (newPdfImageElem.style.width === '13%') {
-                                newPdfImageElem.style.width = '32%';
+                                newPdfImageElem.style.width = '32%';  // Switch to original size
                             } else {
-                                newPdfImageElem.style.width = '13%';
+                                newPdfImageElem.style.width = '13%';  // Switch back to small size
                             }
                         });
 
+                        // Update the headline
                         document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1}`;
+
+                        // Store the diffs for later use
                         text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
                     } else {
                         console.error("Error: Data fields are missing.");
@@ -302,8 +306,10 @@
             });
         }
 
+        // Load the first document by default
         loadDocument(currentIndex);
 
+        // Diff button event listener
         const diffBtn = document.getElementById('diff-btn');
         diffBtn.addEventListener('click', function() {
             diffBtn.classList.toggle('active');
@@ -312,11 +318,12 @@
             if (diffBtnActive) {
                 highlightCommonSubstrings();
             } else {
-                text1Elem.innerText = originalText1;
+                text1Elem.innerText = originalText1;  // Reset directly
                 text2Elem.innerText = originalText2;
             }
         });
 
+        // Highlight common substrings based on the stored diffs
         function highlightCommonSubstrings() {
             const diffs = JSON.parse(text1Elem.getAttribute('data-diffs'));
 
@@ -338,17 +345,21 @@
             text2Elem.innerHTML = highlightedText2;
         }
 
+        // Function to reset button states when navigating forward or backward
         function resetButtons() {
             const allButtons = document.querySelectorAll('.green-btn, .white-btn');
-            allButtons.forEach(btn => btn.classList.remove('active'));
-            goForwardBtn.disabled = true;
+            allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
+            goForwardBtn.disabled = true;  // Disable "Go Forward" again until new choice is made
         }
 
+        // Function to show an error message if "Go Forward" is clicked when disabled
         function showError() {
-            alert(`I'm sorry, ${currentUser.email}. Please make your choice before proceeding.`);
+            alert(`I'm sorry, ${currentUser.email}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.`);
         }
 
+        // Handle the "Go Forward" button click event
         document.getElementById('go-forward').addEventListener('click', () => {
+            // Ensure `totalItems` is set before proceeding
             if (typeof totalItems === 'undefined' || totalItems === 0) {
                 console.error("Total items not set.");
                 return;
@@ -366,11 +377,12 @@
                     diffBtn.classList.remove('active');
                 }
             } else {
-                showEndOfLineModal();
-                disableGoForward();
+                showEndOfLineModal();  // Show the modal when reaching the last item
             }
         });
 
+
+        // Handle the "Go Back" button click event
         document.getElementById('go-back').addEventListener('click', () => {
             if (currentIndex > 0) {
                 currentIndex--;
@@ -386,6 +398,7 @@
             }
         });
 
+        // Logging user choices
         function logUserChoice(choice) {
             const docId = `user_${currentUser.uid}_pair_${currentIndex}`;
 
@@ -401,10 +414,55 @@
             });
         }
 
+        // Enable "Go Forward" button when a choice is made
         function enableGoForward() {
             goForwardBtn.disabled = false;
         }
 
+                // Show the "End of Line" modal when no more items are available
+                function showEndOfLineModal() {
+            const modal = document.getElementById('endOfLineModal');
+            if (modal) {
+                modal.style.display = "block";
+            } else {
+                console.error("Modal not found.");
+            }
+        }
+
+        // Show the "End of Line" modal when no more items are available
+        function showEndOfLineModal() {
+            modal.style.display = "block";
+        }
+
+        // Forward user to un-picked preferences
+        function loadFirstUnansweredItem() {
+            if (currentUser) {
+                const userEmail = currentUser.email;
+                
+                db.collection('user_preferences').where('userName', '==', userEmail).get()
+                .then((querySnapshot) => {
+                    let answeredItems = [];
+                    querySnapshot.forEach((doc) => {
+                        answeredItems.push(doc.data().pairIndex);
+                    });
+
+                    for (let i = 0; i < totalItems; i++) {
+                        if (!answeredItems.includes(i)) {
+                            currentIndex = i;
+                            loadDocument(currentIndex);
+                            break;
+                        }
+                    }
+                }).catch((error) => {
+                    console.error("Error loading unanswered items:", error);
+                });
+            } else {
+                console.error("No user authenticated.");
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Event listeners for preference buttons
         document.getElementById('prefer-left').addEventListener('click', function() {
             toggleSelection(this);
             logUserChoice('left');
@@ -429,6 +487,7 @@
             button.classList.toggle('active');
         }
 
+        // Keystroke listener -> quicker navigation
         document.addEventListener('keydown', function(event) {
             if (event.key === 'ArrowLeft') {
                 document.getElementById('prefer-left').click();
@@ -444,32 +503,7 @@
             }
         });
 
-        function loadFirstUnansweredItem() {
-            if (currentUser) {
-                const userEmail = currentUser.email;
-                db.collection('user_preferences').where('userName', '==', userEmail).get()
-                .then((querySnapshot) => {
-                    let answeredItems = [];
-                    querySnapshot.forEach((doc) => {
-                        answeredItems.push(doc.data().pairIndex);
-                    });
-
-                    for (let i = 0; i < totalItems; i++) {
-                        if (!answeredItems.includes(i)) {
-                            currentIndex = i;
-                            loadDocument(currentIndex);
-                            break;
-                        }
-                    }
-                }).catch((error) => {
-                    console.error("Error loading unanswered items:", error);
-                });
-            } else {
-                console.error("No user authenticated.");
-                window.location.href = 'login.html';
-            }
-        }
-
+        // Wait for the DOM content to be fully loaded
         document.addEventListener('DOMContentLoaded', (event) => {
             const modal = document.getElementById('endOfLineModal');
             const closeBtn = document.querySelector('.close-btn');
@@ -489,19 +523,20 @@
             }
         });
 
-        function showEndOfLineModal() {
-            const modal = document.getElementById('endOfLineModal');
-            if (modal) {
-                modal.style.display = "block";
-            } else {
-                console.error("Modal not found.");
-            }
-        }
+        // End of Line Modal
+        const modal = document.getElementById('endOfLineModal');
+        const closeBtn = document.querySelector('.close-btn');
 
-        function disableGoForward() {
-            goForwardBtn.disabled = true;
-            goForwardBtn.classList.add('hidden');  // Hide the button
-        }
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+        };
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+
     </script>
 
 <!-- End of Line Modal -->
