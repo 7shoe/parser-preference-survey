@@ -17,6 +17,7 @@
         #pdf-image {
             width: 32%;
             margin-bottom: 20px;
+            border: none; /* Ensure no border is present */
         }
         .text-box-container {
             display: flex;
@@ -293,10 +294,13 @@
                         });
 
                         // Update the headline
-                        document.getElementById('survey-title').innerText = Survey: PDF #${index + 1};
+                        document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1}`;
 
                         // Store the diffs for later use
                         text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
+
+                        // Show or hide buttons based on currentIndex
+                        toggleButtonVisibility();
                     } else {
                         console.error("Error: Data fields are missing.");
                     }
@@ -304,6 +308,26 @@
             }).catch((error) => {
                 console.error("Error retrieving data from Firestore:", error);
             });
+        }
+
+        // Function to show or hide the "Go Forward" and "Go Backward" buttons
+        function toggleButtonVisibility() {
+            const goForwardBtn = document.getElementById('go-forward');
+            const goBackBtn = document.getElementById('go-back');
+
+            // Hide "Go Forward" if at the last item, otherwise show it
+            if (currentIndex >= totalItems - 1) {
+                goForwardBtn.style.visibility = 'hidden';
+            } else {
+                goForwardBtn.style.visibility = 'visible';
+            }
+
+            // Hide "Go Back" if at the first item, otherwise show it
+            if (currentIndex <= 0) {
+                goBackBtn.style.visibility = 'hidden';
+            } else {
+                goBackBtn.style.visibility = 'visible';
+            }
         }
 
         // Load the first document by default
@@ -332,8 +356,8 @@
 
             diffs.forEach((diff) => {
                 if (diff.type === 'equal') {
-                    highlightedText1 += <span class="highlight">${diff.text}</span>;
-                    highlightedText2 += <span class="highlight">${diff.text}</span>;
+                    highlightedText1 += `<span class="highlight">${diff.text}</span>`;
+                    highlightedText2 += `<span class="highlight">${diff.text}</span>`;
                 } else if (diff.type === 'delete') {
                     highlightedText1 += diff.text;
                 } else if (diff.type === 'insert') {
@@ -354,12 +378,12 @@
 
         // Function to show an error message if "Go Forward" is clicked when disabled
         function showError() {
-            alert(I'm sorry, ${currentUser.email}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.);
+            alert(`I'm sorry, ${currentUser.email}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.`);
         }
 
         // Handle the "Go Forward" button click event
         document.getElementById('go-forward').addEventListener('click', () => {
-            // Ensure totalItems is set before proceeding
+            // Ensure `totalItems` is set before proceeding
             if (typeof totalItems === 'undefined' || totalItems === 0) {
                 console.error("Total items not set.");
                 return;
@@ -400,7 +424,7 @@
 
         // Logging user choices
         function logUserChoice(choice) {
-            const docId = user_${currentUser.uid}_pair_${currentIndex};
+            const docId = `user_${currentUser.uid}_pair_${currentIndex}`;
 
             db.collection('user_preferences').doc(docId).set({
                 userName: currentUser.email,
