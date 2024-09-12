@@ -419,49 +419,6 @@
             goForwardBtn.disabled = false;
         }
 
-                // Show the "End of Line" modal when no more items are available
-                function showEndOfLineModal() {
-            const modal = document.getElementById('endOfLineModal');
-            if (modal) {
-                modal.style.display = "block";
-            } else {
-                console.error("Modal not found.");
-            }
-        }
-
-        // Show the "End of Line" modal when no more items are available
-        function showEndOfLineModal() {
-            modal.style.display = "block";
-        }
-
-        // Forward user to un-picked preferences
-        function loadFirstUnansweredItem() {
-            if (currentUser) {
-                const userEmail = currentUser.email;
-                
-                db.collection('user_preferences').where('userName', '==', userEmail).get()
-                .then((querySnapshot) => {
-                    let answeredItems = [];
-                    querySnapshot.forEach((doc) => {
-                        answeredItems.push(doc.data().pairIndex);
-                    });
-
-                    for (let i = 0; i < totalItems; i++) {
-                        if (!answeredItems.includes(i)) {
-                            currentIndex = i;
-                            loadDocument(currentIndex);
-                            break;
-                        }
-                    }
-                }).catch((error) => {
-                    console.error("Error loading unanswered items:", error);
-                });
-            } else {
-                console.error("No user authenticated.");
-                window.location.href = 'login.html';
-            }
-        }
-
         // Event listeners for preference buttons
         document.getElementById('prefer-left').addEventListener('click', function() {
             toggleSelection(this);
@@ -502,6 +459,49 @@
                 document.getElementById('pdf-image').click();
             }
         });
+
+        // Show the "End of Line" modal when no more items are available
+        function showEndOfLineModal() {
+            const modal = document.getElementById('endOfLineModal');
+            if (modal) {
+                modal.style.display = "block";
+            } else {
+                console.error("Modal not found.");
+            }
+        }
+
+        // Show the "End of Line" modal when no more items are available
+        function showEndOfLineModal() {
+            modal.style.display = "block";
+        }
+
+        // Forward user to un-picked preferences
+        function loadFirstUnansweredItem() {
+            if (currentUser) {
+                const userEmail = currentUser.email;
+                
+                db.collection('user_preferences').where('userName', '==', userEmail).get()
+                .then((querySnapshot) => {
+                    let answeredItems = [];
+                    querySnapshot.forEach((doc) => {
+                        answeredItems.push(doc.data().pairIndex);
+                    });
+
+                    for (let i = 0; i < totalItems; i++) {
+                        if (!answeredItems.includes(i)) {
+                            currentIndex = i;
+                            loadDocument(currentIndex);
+                            break;
+                        }
+                    }
+                }).catch((error) => {
+                    console.error("Error loading unanswered items:", error);
+                });
+            } else {
+                console.error("No user authenticated.");
+                window.location.href = 'login.html';
+            }
+        }
 
         // Wait for the DOM content to be fully loaded
         document.addEventListener('DOMContentLoaded', (event) => {
