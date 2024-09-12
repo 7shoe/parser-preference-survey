@@ -460,21 +460,6 @@
             }
         });
 
-        // Show the "End of Line" modal when no more items are available
-        function showEndOfLineModal() {
-            const modal = document.getElementById('endOfLineModal');
-            if (modal) {
-                modal.style.display = "block";
-            } else {
-                console.error("Modal not found.");
-            }
-        }
-
-        // Show the "End of Line" modal when no more items are available
-        function showEndOfLineModal() {
-            modal.style.display = "block";
-        }
-
         // Forward user to un-picked preferences
         function loadFirstUnansweredItem() {
             if (currentUser) {
@@ -522,6 +507,21 @@
                 console.error("Modal or close button not found in the DOM.");
             }
         });
+
+        // Show the "End of Line" modal when no more items are available
+        function showEndOfLineModal() {
+            const modal = document.getElementById('endOfLineModal');
+            if (modal) {
+                modal.style.display = "block";
+            } else {
+                console.error("Modal not found.");
+            }
+        }
+
+        // Show the "End of Line" modal when no more items are available
+        function showEndOfLineModal() {
+            modal.style.display = "block";
+        }
 
         // End of Line Modal
         const modal = document.getElementById('endOfLineModal');
