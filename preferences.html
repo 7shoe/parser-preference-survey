@@ -95,26 +95,24 @@
             width: 80%;
             margin-top: 40px;
         }
+        #go-back, #go-forward {
+            position: fixed; /* Fix the buttons in place */
+            bottom: 20px; /* Distance from the bottom */
+            padding: 10px;
+            font-size: 16px;
+            background-color: #555;
+            color: white;
+            cursor: pointer;
+            z-index: 1000; /* Ensure the buttons stay on top */
+        }
         #go-back {
-            position: fixed;
-            left: 0;
-            bottom: 0;
-            padding: 10px;
-            font-size: 16px;
-            background-color: #555;
-            color: white;
-            cursor: pointer;
+            left: 20px; /* Align Go Back button to the left */
         }
+
         #go-forward {
-            position: fixed;
-            right: 0;
-            bottom: 0;
-            padding: 10px;
-            font-size: 16px;
-            background-color: #555;
-            color: white;
-            cursor: pointer;
+            right: 20px; /* Align Go Forward button to the right */
         }
+
         #go-forward:disabled {
             background-color: grey;
             cursor: not-allowed;
@@ -310,6 +308,28 @@
             });
         }
 
+        function updateButtonVisibility() {
+            const goBackBtn = document.getElementById('go-back');
+            const goForwardBtn = document.getElementById('go-forward');
+
+            // Always show Go Forward on first load
+            goForwardBtn.style.display = 'block';
+
+            // Hide Go Back if it's the first item
+            if (currentIndex === 0) {
+                goBackBtn.style.display = 'none';
+            } else {
+                goBackBtn.style.display = 'block';
+            }
+
+            // Hide Go Forward if it's the last item
+            if (currentIndex >= totalItems - 1) {
+                goForwardBtn.style.display = 'none';
+            } else {
+                goForwardBtn.style.display = 'block';
+            }
+        }
+
         // Function to show or hide the "Go Forward" and "Go Backward" buttons
         function toggleButtonVisibility() {
             const goForwardBtn = document.getElementById('go-forward');
@@ -443,23 +463,28 @@
             goForwardBtn.disabled = false;
         }
 
-        // Event listeners for preference buttons
+        // Left
         document.getElementById('prefer-left').addEventListener('click', function() {
             toggleSelection(this);
             logUserChoice('left');
             enableGoForward();
+            updateButtonVisibility();  // Update visibility after selection
         });
 
+        // Right
         document.getElementById('prefer-right').addEventListener('click', function() {
             toggleSelection(this);
             logUserChoice('right');
             enableGoForward();
+            updateButtonVisibility();  // Update visibility after selection
         });
 
+        // No preference
         document.getElementById('neither').addEventListener('click', function() {
             toggleSelection(this);
             logUserChoice('neither');
             enableGoForward();
+            updateButtonVisibility();  // Update visibility after selection
         });
 
         function toggleSelection(button) {
@@ -516,6 +541,13 @@
         document.addEventListener('DOMContentLoaded', (event) => {
             const modal = document.getElementById('endOfLineModal');
             const closeBtn = document.querySelector('.close-btn');
+
+            // Make sure "Go Forward" button is shown on load
+            const goForwardBtn = document.getElementById('go-forward');
+            goForwardBtn.style.display = 'block';  // Ensure Go Forward is visible initially
+
+            // Also update the visibility of the Go Back button if necessary
+            updateButtonVisibility(); // Call the function that handles visibility logic
 
             if (modal && closeBtn) {
                 closeBtn.onclick = function() {
