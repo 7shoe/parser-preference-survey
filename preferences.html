@@ -347,7 +347,7 @@
             if (currentIndex >= totalItems - 1) {
                 goForwardBtn.style.visibility = 'hidden';
             } else {
-                goForwardBtn.style.visibility = 'visible';  // Always ensure "Go Forward" is visible on first load
+                goForwardBtn.style.visibility = 'visible';
             }
 
             // Hide "Go Back" if at the first item, otherwise show it
@@ -540,6 +540,30 @@
                 setTimeout(() => document.getElementById('go-forward').click(), 200);
             } else if (event.key === 'ArrowUp') {
                 document.getElementById('pdf-image').click();
+            }
+        });
+
+        // Wait for the DOM content to be fully loaded
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const modal = document.getElementById('endOfLineModal');
+            const closeBtn = document.querySelector('.close-btn');
+
+            // Forward button always visible
+            const goForwardBtn = document.getElementById('go-forward');
+            goForwardBtn.style.visibility = 'visible'; // Make sure "Go Forward" is visible when page loads
+
+            if (modal && closeBtn) {
+                closeBtn.onclick = function() {
+                    modal.style.display = "none";
+                };
+
+                window.onclick = function(event) {
+                    if (event.target === modal) {
+                        modal.style.display = "none";
+                    }
+                };
+            } else {
+                console.error("Modal or close button not found in the DOM.");
             }
         });
 
