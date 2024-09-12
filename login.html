@@ -79,7 +79,7 @@
 
         <!-- Username and Password fields -->
         <form id="loginForm">
-            <input type="text" id="username" name="username" placeholder="Enter username" required><br><br>
+            <input type="text" id="email" name="email" placeholder="Enter email" required><br><br>
             <input type="password" id="password" name="password" placeholder="Enter password" required><br><br>
             <button type="submit">Submit</button>
         </form>
@@ -88,6 +88,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
 
     <script>
         // Your Firebase configuration
@@ -100,10 +101,12 @@
             appId: "1:187427222726:web:50d39367fb95b78cdcd3c7",
             measurementId: "G-FLKV3XGQ1M"
         };
+
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        
+        const auth = firebase.auth();
+
         // Fetch the logo image from Firestore and display it
         function fetchFirestoreImage() {
             db.collection('login_page').doc('item0').get()
@@ -129,41 +132,25 @@
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent the form from submitting and reloading the page
 
-            // Get the entered username and password
-            const username = document.getElementById('username').value;
+            // Get the entered email and password
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            console.log("Entered Username:", username);  // Debugging: log entered username
+            // Use Firebase Authentication to log in the user
+            auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // Successful login
+                console.log("User logged in:", userCredential.user);
 
-            // Query the Firestore users collection to check if the username exists
-            db.collection('users').where('name', '==', username).get()  // Query using 'name' field
-            .then((querySnapshot) => {
-                console.log("Query Snapshot Size:", querySnapshot.size);  // Debugging: log snapshot size
+                // Store user info in localStorage (optional)
+                localStorage.setItem('username', userCredential.user.email);
 
-                if (querySnapshot.empty) {
-                    // Username not found
-                    alert("Username unknown, please contact siebenschuh@uchicago.edu");
-                } else {
-                    // Username exists, check the password
-                    querySnapshot.forEach((doc) => {
-                        const userData = doc.data();
-                        console.log("Firestore Data for User:", userData);  // Debugging: log user data
-
-                        // Check if the password matches
-                        if (userData.pass === password) {
-                            // Username and password match, redirect to preferences.html
-                            localStorage.setItem('username', username);
-                            window.location.href = 'preferences.html';
-                        } else {
-                            // Username is correct but password is wrong
-                            alert("Username known but password is false");
-                        }
-                    });
-                }
+                // Redirect to preferences.html
+                window.location.href = 'preferences.html';
             })
             .catch((error) => {
-                console.error("Error retrieving document: ", error);
-                alert("An error occurred while verifying your login. Please try again.");
+                console.error("Error logging in:", error);
+                alert("Error logging in: " + error.message);
             });
         });
     </script>
