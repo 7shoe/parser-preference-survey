@@ -240,17 +240,18 @@
                 currentUser = user;  // Get the current authenticated user
                 console.log("User logged in: ", user.email);
 
-                // Fetch total items count from Firestore
+                // fetch total items count from Firestore
                 db.collection('four_sample_imgs').get().then((querySnapshot) => {
                     totalItems = querySnapshot.size;  // Set totalItems to the number of documents
+                    loadFirstUnansweredItem();  // Only proceed after totalItems is assigned
+                }).catch((error) => {
+                    console.error("Error retrieving total items:", error);
                 });
-
-                // Load the first unanswered item once the user is authenticated
-                loadFirstUnansweredItem();
             } else {
                 window.location.href = 'login.html';  // Redirect to login if no user is logged in
             }
         });
+
 
         let currentIndex = 0;  // Default to document with id=0
         const text1Elem = document.getElementById('text1');
@@ -358,6 +359,12 @@
 
         // Handle the "Go Forward" button click event
         document.getElementById('go-forward').addEventListener('click', () => {
+            // Ensure `totalItems` is set before proceeding
+            if (typeof totalItems === 'undefined' || totalItems === 0) {
+                console.error("Total items not set.");
+                return;
+            }
+
             if (currentIndex < totalItems - 1) {
                 currentIndex++;
                 loadDocument(currentIndex);
@@ -370,9 +377,10 @@
                     diffBtn.classList.remove('active');
                 }
             } else {
-                showEndOfLineModal();
+                showEndOfLineModal();  // Show the modal when reaching the last item
             }
         });
+
 
         // Handle the "Go Back" button click event
         document.getElementById('go-back').addEventListener('click', () => {
