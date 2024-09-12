@@ -298,11 +298,6 @@
                         // Store the diffs for later use
                         text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
 
-                        // Make sure "Go Forward" is visible when the page is first loaded
-                        if (index === 0) {
-                            goForwardBtn.style.visibility = 'visible';  // Ensure "Go Forward" is visible
-                        }
-
                         // Show or hide buttons based on currentIndex
                         toggleButtonVisibility();
                     } else {
@@ -387,6 +382,12 @@
 
         // Handle the "Go Forward" button click event
         document.getElementById('go-forward').addEventListener('click', () => {
+            // Ensure `totalItems` is set before proceeding
+            if (typeof totalItems === 'undefined' || totalItems === 0) {
+                console.error("Total items not set.");
+                return;
+            }
+
             if (currentIndex < totalItems - 1) {
                 currentIndex++;
                 loadDocument(currentIndex);
@@ -398,9 +399,6 @@
                 } else {
                     diffBtn.classList.remove('active');
                 }
-
-                // Update button visibility after navigation
-                toggleButtonVisibility();
             } else {
                 showEndOfLineModal();  // Show the modal when reaching the last item
             }
@@ -420,9 +418,6 @@
                 } else {
                     diffBtn.classList.remove('active');
                 }
-
-                // Update button visibility after navigation
-                toggleButtonVisibility();
             }
         });
 
@@ -489,7 +484,6 @@
         });
 
         // Forward user to un-picked preferences
-        // Ensure the Go Forward button is visible after the first unanswered item is loaded
         function loadFirstUnansweredItem() {
             if (currentUser) {
                 const userEmail = currentUser.email;
@@ -505,8 +499,6 @@
                         if (!answeredItems.includes(i)) {
                             currentIndex = i;
                             loadDocument(currentIndex);
-                            // Ensure the "Go Forward" button is visible even after first load
-                            toggleButtonVisibility();
                             break;
                         }
                     }
