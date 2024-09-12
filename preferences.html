@@ -298,7 +298,12 @@
                         // Store the diffs for later use
                         text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
 
-                        // Update button visibility after document is loaded
+                        // Make sure "Go Forward" is visible when the page is first loaded
+                        if (index === 0) {
+                            goForwardBtn.style.visibility = 'visible';  // Ensure "Go Forward" is visible
+                        }
+
+                        // Show or hide buttons based on currentIndex
                         toggleButtonVisibility();
                     } else {
                         console.error("Error: Data fields are missing.");
@@ -326,37 +331,6 @@
                 goBackBtn.style.visibility = 'hidden';
             } else {
                 goBackBtn.style.visibility = 'visible';
-            }
-        }
-
-
-        // Ensure the Go Forward button is visible after the first unanswered item is loaded
-        function loadFirstUnansweredItem() {
-            if (currentUser) {
-                const userEmail = currentUser.email;
-                
-                db.collection('user_preferences').where('userName', '==', userEmail).get()
-                .then((querySnapshot) => {
-                    let answeredItems = [];
-                    querySnapshot.forEach((doc) => {
-                        answeredItems.push(doc.data().pairIndex);
-                    });
-
-                    for (let i = 0; i < totalItems; i++) {
-                        if (!answeredItems.includes(i)) {
-                            currentIndex = i;
-                            loadDocument(currentIndex);
-                            // Ensure the "Go Forward" button is visible even after first load
-                            toggleButtonVisibility();
-                            break;
-                        }
-                    }
-                }).catch((error) => {
-                    console.error("Error loading unanswered items:", error);
-                });
-            } else {
-                console.error("No user authenticated.");
-                window.location.href = 'login.html';
             }
         }
 
@@ -514,14 +488,41 @@
             }
         });
 
+        // Forward user to un-picked preferences
+        // Ensure the Go Forward button is visible after the first unanswered item is loaded
+        function loadFirstUnansweredItem() {
+            if (currentUser) {
+                const userEmail = currentUser.email;
+                
+                db.collection('user_preferences').where('userName', '==', userEmail).get()
+                .then((querySnapshot) => {
+                    let answeredItems = [];
+                    querySnapshot.forEach((doc) => {
+                        answeredItems.push(doc.data().pairIndex);
+                    });
+
+                    for (let i = 0; i < totalItems; i++) {
+                        if (!answeredItems.includes(i)) {
+                            currentIndex = i;
+                            loadDocument(currentIndex);
+                            // Ensure the "Go Forward" button is visible even after first load
+                            toggleButtonVisibility();
+                            break;
+                        }
+                    }
+                }).catch((error) => {
+                    console.error("Error loading unanswered items:", error);
+                });
+            } else {
+                console.error("No user authenticated.");
+                window.location.href = 'login.html';
+            }
+        }
+
         // Wait for the DOM content to be fully loaded
         document.addEventListener('DOMContentLoaded', (event) => {
             const modal = document.getElementById('endOfLineModal');
             const closeBtn = document.querySelector('.close-btn');
-
-            // Forward button always visible
-            const goForwardBtn = document.getElementById('go-forward');
-            goForwardBtn.style.visibility = 'visible'; // Make sure "Go Forward" is visible when page loads
 
             if (modal && closeBtn) {
                 closeBtn.onclick = function() {
