@@ -145,6 +145,43 @@
         .highlight {
             background-color: rgba(255, 255, 0, 0.5); /* Semi-transparent yellow */
         }
+        /* The Modal (background) */
+        .modal {
+        display: none; /* Hidden by default */
+        position: fixed;
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Black background with transparency */
+    }
+
+    /* Modal Content */
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    /* Close Button */
+    .close-btn {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close-btn:hover,
+    .close-btn:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
     </style>
 </head>
 <body>
@@ -172,6 +209,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script> <!-- Add auth SDK -->
 
     <script>
         // Initialize Firebase
@@ -187,13 +225,27 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();         // init Firebase auth
+
+        // check if a user is logged in
+        let currentUser = null;
+        // -> if not, fore authentication
+        auth.onAuthStateChanged(function(user) {
+            if (user) {
+                currentUser = user;  // Get the current authenticated user
+                console.log("User logged in: ", user.email);
+            } else {
+                window.location.href = 'login.html';  // Redirect to login if no user is logged in
+            }
+        });
 
         let currentIndex = 0;  // Default to document with id=0
-        const userName = localStorage.getItem('username');  // Get user's name from login
+        //const userName = localStorage.getItem('username');  // Get user's name from login
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
         const diffContainerElem = document.getElementById('diff-container');
         const goForwardBtn = document.getElementById('go-forward');
+        
 
         // Disable the "Go Forward" button initially
         goForwardBtn.disabled = true;
@@ -238,10 +290,10 @@
             });
         }
 
-        // Load the first document by default
+        // load the first document by default
         loadDocument(currentIndex);
 
-        // Add the Diff button event listener
+        // add the Diff button event listener
         const diffBtn = document.getElementById('diff-btn');
         diffBtn.addEventListener('click', function() {
             diffBtn.classList.toggle('active');
@@ -249,11 +301,11 @@
             if (diffBtn.classList.contains('active')) {
                 highlightCommonSubstrings();
             } else {
-                loadDocument(currentIndex);  // Reset to the original content
+                loadDocument(currentIndex);  // reset to the original content
             }
         });
 
-        // Highlight common substrings based on the stored diffs
+        // highlight common substrings based on the stored diffs
         function highlightCommonSubstrings() {
             const diffs = JSON.parse(text1Elem.getAttribute('data-diffs'));
 
@@ -279,7 +331,7 @@
             text2Elem.innerHTML = highlightedText2;
         }
 
-        // Function to reset button states when navigating forward or backward
+        // function to reset button states when navigating forward or backward
         function resetButtons() {
             const allButtons = document.querySelectorAll('.green-btn, .white-btn');
             allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
@@ -314,18 +366,17 @@
 
         // Logging user choices
         function logUserChoice(choice) {
-            const userName = localStorage.getItem('username');  // Get the logged-in username
-            const docId = `user_${userName}_pair_${currentIndex}`;  // Create a unique document ID for each user's preference
+            const docId = `user_${currentUser.uid}_pair_${currentIndex}`;
 
             db.collection('user_preferences').doc(docId).set({
-                userName: userName,  // Store the username
-                choice: choice,  // The choice the user made ('left', 'right', 'neither')
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),  // Log the timestamp
-                pairIndex: currentIndex  // Log the index of the current pair
+                userName: currentUser.email,
+                choice: choice,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                pairIndex: currentIndex
             }).then(() => {
-                console.log("User preference logged:", choice);  // Log success to the console
+                console.log("User preference logged:", choice);
             }).catch((error) => {
-                console.error("Error logging preference:", error);  // Log any errors
+                console.error("Error logging preference:", error);
             });
         }
 
@@ -380,67 +431,57 @@
             }
         });
 
-        // log user preferences
-        function logUserChoice(choice) {
-            const userName = localStorage.getItem('username');
-            const docId = `user_${userName}_item_${currentIndex}`; // Unique ID based on user and item
-            
-            db.collection('user_preferences').doc(docId).set({
-                userName: userName,
-                choice: choice,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                documentIndex: currentIndex
-            }).then(() => {
-                console.log("User preference saved:", choice);
-            }).catch((error) => {
-                console.error("Error saving preference:", error);
-            });
-        }
-
-        // Updated event listeners to track preferences
-        document.getElementById('prefer-left').addEventListener('click', function() {
-            toggleSelection(this);
-            logUserChoice('left');
-            enableGoForward();
-        });
-
-        document.getElementById('prefer-right').addEventListener('click', function() {
-            toggleSelection(this);
-            logUserChoice('right');
-            enableGoForward();
-        });
-
-        document.getElementById('neither').addEventListener('click', function() {
-            toggleSelection(this);
-            logUserChoice('neither');
-            enableGoForward();
-        });
-
         // forward user to un-picked preferences
         function loadFirstUnansweredItem() {
-            const userName = localStorage.getItem('username');
-            
-            db.collection('user_preferences').where('userName', '==', userName).get()
-            .then((querySnapshot) => {
-                let answeredItems = [];
-                querySnapshot.forEach((doc) => {
-                    answeredItems.push(doc.data().documentIndex);
-                });
+            // Ensure the user is authenticated
+            if (currentUser) {
+                const userEmail = currentUser.email; // Use the authenticated user's email (or use currentUser.uid for the user ID)
+                
+                // Query Firestore for the user's answered items
+                db.collection('user_preferences').where('userName', '==', userEmail).get()
+                .then((querySnapshot) => {
+                    let answeredItems = [];
+                    querySnapshot.forEach((doc) => {
+                        answeredItems.push(doc.data().pairIndex);  // Collect the indices of answered pairs
+                    });
 
-                // Find the first unanswered item
-                for (let i = 0; i < totalItems; i++) {
-                    if (!answeredItems.includes(i)) {
-                        currentIndex = i;
-                        loadDocument(currentIndex); // Load the first unanswered document
-                        break;
+                    // Find the first unanswered item by checking against total items
+                    for (let i = 0; i < totalItems; i++) {
+                        if (!answeredItems.includes(i)) {
+                            currentIndex = i;
+                            loadDocument(currentIndex);  // Load the first unanswered document
+                            break;
+                        }
                     }
-                }
-            }).catch((error) => {
-                console.error("Error loading unanswered items:", error);
-            });
+                }).catch((error) => {
+                    console.error("Error loading unanswered items:", error);
+                });
+            } else {
+                console.error("No user authenticated.");
+                window.location.href = 'login.html';  // Redirect to login if no user is authenticated
+            }
         }
 
-        // end of line message
+        // Show the "End of Line" modal when no more items are available
+        function showEndOfLineModal() {
+            const modal = document.getElementById('endOfLineModal');
+            modal.style.display = "block";  // Show the modal
+
+            // Close the modal when the close button (X) is clicked
+            const closeBtn = document.querySelector('.close-btn');
+            closeBtn.onclick = function() {
+                modal.style.display = "none";
+            };
+
+            // Close the modal if the user clicks anywhere outside the modal
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            };
+        }
+
+        // handle the "Go Forward" button click event
         document.getElementById('go-forward').addEventListener('click', () => {
             if (currentIndex < totalItems - 1) {
                 currentIndex++;
@@ -448,14 +489,24 @@
                 resetButtons();
                 diffBtn.classList.remove('active');
             } else {
-                alert("You have reached the end of the line. Please come back in a bit.");
+                // Show modal when end of the collection is reached
+                showEndOfLineModal();
             }
         });
 
-        // Call this function on page load
+        // call this function on page load
         window.onload = function() {
             loadFirstUnansweredItem();
         };
     </script>
+
+<!-- End of Line Modal -->
+<div id="endOfLineModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <p>You have reached the end of the items. Please come back later or review previous items.</p>
+    </div>
+</div>
+
 </body>
 </html>
