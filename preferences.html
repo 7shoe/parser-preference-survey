@@ -187,6 +187,8 @@
     </style>
 </head>
 <body>
+    <button id="jump2new-btn" style="position: fixed; top: 10px; right: 10px; padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; display: none;">Jump2new</button>
+
     <h1 id="survey-title" style="font-family: Helvetica, Arial, sans-serif; color: white; text-align: center;"></h1>
     <img id="pdf-image" src="" alt="PDF Snippet">
     
@@ -264,6 +266,23 @@
         let originalText1 = '';
         let originalText2 = '';
 
+        // handle the "Jump2new" button
+        document.getElementById('jump2new-btn').addEventListener('click', function() {
+            loadFirstUnansweredItem();  // Jump to the first unannotated item
+        });
+
+        // show or hide the "Jump2new" button based on progress
+        function toggleJump2newButton(selectionsMade, totalItems) {
+            const jump2newBtn = document.getElementById('jump2new-btn');
+            
+            if (selectionsMade < totalItems) {
+                jump2newBtn.style.display = 'block';  // Show the button
+            } else {
+                jump2newBtn.style.display = 'none';  // Hide the button
+            }
+        }
+
+        // Modify the existing loadDocument function to include toggleJump2newButton
         function loadDocument(index) {
             db.collection('four_sample_imgs').where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
@@ -298,6 +317,9 @@
                         .then((querySnapshot) => {
                             const selectionsMade = querySnapshot.size;  // Number of documents in 'user_preferences'
                             document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1} (Progress: ${selectionsMade}/${totalItems})`;
+
+                            // Show or hide the "Jump2new" button
+                            toggleJump2newButton(selectionsMade, totalItems);
                         })
                         .catch((error) => {
                             console.error("Error retrieving user preferences count:", error);
