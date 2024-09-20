@@ -297,7 +297,7 @@
                         .get()
                         .then((querySnapshot) => {
                             const selectionsMade = querySnapshot.size;  // Number of documents in 'user_preferences'
-                            document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1} (${selectionsMade}/${totalItems})`;
+                            document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1} (Progress: ${selectionsMade}/${totalItems})`;
                         })
                         .catch((error) => {
                             console.error("Error retrieving user preferences count:", error);
@@ -516,6 +516,9 @@
                 setTimeout(() => document.getElementById('go-forward').click(), 200);
             } else if (event.key === 'ArrowUp') {
                 document.getElementById('pdf-image').click();
+            } else if (event.key === ' ') {  // Handle spacebar for diff button
+                event.preventDefault();  // Prevent the default behavior (scrolling)
+                document.getElementById('diff-btn').click();  // Trigger the diff button click
             }
         });
 
