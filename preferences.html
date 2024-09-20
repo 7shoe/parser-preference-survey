@@ -530,38 +530,6 @@
             button.classList.toggle('active');
         }
 
-        // function to handle scrolling
-        function handleScroll(direction) {
-            // Check if the cursor is over a text area
-            const textAreas = document.querySelectorAll('.text-box');
-            let isTextAreaHovered = false;
-
-            textAreas.forEach(textArea => {
-                const rect = textArea.getBoundingClientRect();
-                if (rect.top <= window.innerHeight && rect.bottom >= 0) {
-                    isTextAreaHovered = true;
-                }
-            });
-
-            // If a text area is hovered, scroll within the text area
-            if (isTextAreaHovered) {
-                textAreas.forEach(textArea => {
-                    if (direction === 'up') {
-                        textArea.scrollTop -= 50;  // Scroll up within the text area
-                    } else if (direction === 'down') {
-                        textArea.scrollTop += 50;  // Scroll down within the text area
-                    }
-                });
-            } else {
-                // Otherwise, scroll the whole page
-                if (direction === 'up') {
-                    window.scrollBy(0, -50);  // Scroll the page up
-                } else if (direction === 'down') {
-                    window.scrollBy(0, 50);  // Scroll the page down
-                }
-            }
-        }
-
         // Keystroke listener -> quicker navigation
         document.addEventListener('keydown', function(event) {
             if (event.key === 'ArrowLeft') {
@@ -578,11 +546,7 @@
             } else if (event.key === ' ') {  // Handle spacebar for diff button
                 event.preventDefault();  // Prevent the default behavior (scrolling)
                 document.getElementById('diff-btn').click();  // Trigger the diff button click
-            } else if (event.key === 'w' || event.key === 'W') {
-                handleScroll('up');
-            } else if (event.key === 's' || event.key === 'S') {
-                handleScroll('down');
-            }
+            } 
         });
 
         // Forward user to un-picked preferences
