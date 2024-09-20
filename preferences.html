@@ -275,18 +275,40 @@
                         text2Elem.innerText = originalText2;
 
                         const oldPdfImageElem = document.getElementById('pdf-image');
+
+                        // Replace the old image with a new one
                         const newPdfImageElem = oldPdfImageElem.cloneNode(true);
                         newPdfImageElem.src = data.url;
-                        newPdfImageElem.style.width = '13%';
+                        newPdfImageElem.style.width = '13%';  // Start with the small size
                         oldPdfImageElem.replaceWith(newPdfImageElem);
 
-                        setupImageToggle(newPdfImageElem); // Use the new function
+                        // Add click event listener for toggling the size of the new image
+                        newPdfImageElem.addEventListener('click', function () {
+                            if (newPdfImageElem.style.width === '13%') {
+                                newPdfImageElem.style.width = '32%';  // Switch to original size
+                            } else {
+                                newPdfImageElem.style.width = '13%';  // Switch back to small size
+                            }
+                        });
 
-                        // Update the survey title with progress
-                        updateSurveyTitleWithProgress(index + 1);
+                        // Update the headline with progress
+                        db.collection('user_preferences')
+                        .where('userName', '==', currentUser.email)
+                        .get()
+                        .then((querySnapshot) => {
+                            const selectionsMade = querySnapshot.size;  // Number of documents in 'user_preferences'
+                            document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1} (${selectionsMade}/${totalItems})`;
+                        })
+                        .catch((error) => {
+                            console.error("Error retrieving user preferences count:", error);
+                            document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1}`;
+                        });
 
+                        // Store the diffs for later use
                         text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
-                        updateButtonVisibility();
+
+                        // Show or hide buttons based on currentIndex
+                        toggleButtonVisibility();
                     } else {
                         console.error("Error: Data fields are missing.");
                     }
@@ -295,19 +317,7 @@
                 console.error("Error retrieving data from Firestore:", error);
             });
         }
-        function updateSurveyTitleWithProgress(currentIndex) {
-            // Fetch the total number of selections made by the user
-            db.collection('user_preferences')
-                .where('userName', '==', currentUser.email)
-                .get()
-                .then((querySnapshot) => {
-                    const selectionsMade = querySnapshot.size;  // Number of documents in 'user_preferences'
-                    document.getElementById('survey-title').innerText = `Survey: PDF #${currentIndex} (${selectionsMade}/${totalItems})`;
-                })
-                .catch((error) => {
-                    console.error("Error retrieving user preferences count:", error);
-                });
-        }
+
         function updateButtonVisibility() {
             const goBackBtn = document.getElementById('go-back');
             const goForwardBtn = document.getElementById('go-forward');
