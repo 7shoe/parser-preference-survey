@@ -304,6 +304,9 @@
                             document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1}`;
                         });
 
+                        // Check for the user's previous choice
+                        highlightPreviousChoice(index);
+
                         // Store the diffs for later use
                         text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
 
@@ -315,6 +318,30 @@
                 });
             }).catch((error) => {
                 console.error("Error retrieving data from Firestore:", error);
+            });
+        }
+
+        // Function to check and highlight the user's previous choice
+        function highlightPreviousChoice(pairIndex) {
+            const docId = `user_${currentUser.uid}_pair_${pairIndex}`;
+
+            db.collection('user_preferences').doc(docId).get().then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const choice = data.choice;
+                    
+                    if (choice === 'left') {
+                        document.getElementById('prefer-left').classList.add('active');
+                    } else if (choice === 'right') {
+                        document.getElementById('prefer-right').classList.add('active');
+                    } else if (choice === 'neither') {
+                        document.getElementById('neither').classList.add('active');
+                    }
+                } else {
+                    console.log("No previous choice found for this pair.");
+                }
+            }).catch((error) => {
+                console.error("Error checking previous choice:", error);
             });
         }
 
