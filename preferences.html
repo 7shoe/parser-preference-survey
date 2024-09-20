@@ -266,12 +266,12 @@
         let originalText1 = '';
         let originalText2 = '';
 
-        // handle the "Jump2new" button
+        // Handle the "Jump2new" button
         document.getElementById('jump2new-btn').addEventListener('click', function() {
             loadFirstUnansweredItem();  // Jump to the first unannotated item
         });
 
-        // show or hide the "Jump2new" button based on progress
+        // Show or hide the "Jump2new" button based on progress
         function toggleJump2newButton(selectionsMade, totalItems) {
             const jump2newBtn = document.getElementById('jump2new-btn');
             
@@ -282,7 +282,35 @@
             }
         }
 
-        // Modify the existing loadDocument function to include toggleJump2newButton
+        // Function to load the first unannotated item
+        function loadFirstUnansweredItem() {
+            if (currentUser) {
+                const userEmail = currentUser.email;
+
+                db.collection('user_preferences').where('userName', '==', userEmail).get()
+                .then((querySnapshot) => {
+                    let answeredItems = [];
+                    querySnapshot.forEach((doc) => {
+                        answeredItems.push(doc.data().pairIndex);
+                    });
+
+                    for (let i = 0; i < totalItems; i++) {
+                        if (!answeredItems.includes(i)) {
+                            currentIndex = i;  // Update the currentIndex to the first unanswered item
+                            loadDocument(currentIndex);  // Load the first unanswered document
+                            break;
+                        }
+                    }
+                }).catch((error) => {
+                    console.error("Error loading unanswered items:", error);
+                });
+            } else {
+                console.error("No user authenticated.");
+                window.location.href = 'login.html';  // Redirect to login if no user is logged in
+            }
+        }
+
+        // Existing loadDocument function
         function loadDocument(index) {
             db.collection('four_sample_imgs').where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
@@ -575,7 +603,7 @@
         function loadFirstUnansweredItem() {
             if (currentUser) {
                 const userEmail = currentUser.email;
-                
+
                 db.collection('user_preferences').where('userName', '==', userEmail).get()
                 .then((querySnapshot) => {
                     let answeredItems = [];
@@ -585,8 +613,8 @@
 
                     for (let i = 0; i < totalItems; i++) {
                         if (!answeredItems.includes(i)) {
-                            currentIndex = i;
-                            loadDocument(currentIndex);
+                            currentIndex = i;  // Update the currentIndex to the first unanswered item
+                            loadDocument(currentIndex);  // Load the first unanswered document
                             break;
                         }
                     }
@@ -595,7 +623,7 @@
                 });
             } else {
                 console.error("No user authenticated.");
-                window.location.href = 'login.html';
+                window.location.href = 'login.html';  // Redirect to login if no user is logged in
             }
         }
 
