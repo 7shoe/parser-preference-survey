@@ -528,20 +528,45 @@
                 }
             }
         });
-
-        // Logging user choices
+        
+        // Logging user choices and updating progress if it was the first choice
         function logUserChoice(choice) {
             const docId = `user_${currentUser.uid}_pair_${currentIndex}`;
+            
+            // Check if the current item already has a logged choice
+            db.collection('user_preferences').doc(docId).get().then((doc) => {
+                if (!doc.exists) {
+                    // If the document does not exist, log the choice and update the progress
+                    db.collection('user_preferences').doc(docId).set({
+                        userName: currentUser.email,
+                        choice: choice,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        pairIndex: currentIndex
+                    }).then(() => {
+                        console.log("User preference logged:", choice);
 
-            db.collection('user_preferences').doc(docId).set({
-                userName: currentUser.email,
-                choice: choice,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                pairIndex: currentIndex
-            }).then(() => {
-                console.log("User preference logged:", choice);
+                        // Increment the selection count and update the headline
+                        db.collection('user_preferences')
+                        .where('userName', '==', currentUser.email)
+                        .get()
+                        .then((querySnapshot) => {
+                            const selectionsMade = querySnapshot.size;
+                            document.getElementById('survey-title').innerText = `Survey: PDF #${currentIndex + 1} (Progress: ${selectionsMade}/${totalItems})`;
+
+                            // Optionally update the visibility of the "Jump2new" button
+                            toggleJump2newButton(selectionsMade, totalItems);
+                        })
+                        .catch((error) => {
+                            console.error("Error updating progress:", error);
+                        });
+                    }).catch((error) => {
+                        console.error("Error logging preference:", error);
+                    });
+                } else {
+                    console.log("Choice already exists for this pair. Progress will not update.");
+                }
             }).catch((error) => {
-                console.error("Error logging preference:", error);
+                console.error("Error checking previous choice:", error);
             });
         }
 
