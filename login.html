@@ -139,45 +139,20 @@
             // Use Firebase Authentication to log in the user
             auth.signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
-                const userId = userCredential.user.uid;
+                // Successful login
+                console.log("User logged in:", userCredential.user);
 
-                // Calculate group_idx using userId
-                const groupIdx = hashStringToInt(userId) % 12;
+                // Store user info in localStorage (optional)
+                localStorage.setItem('username', userCredential.user.email);
 
-                // Store group_idx in localStorage for use in preferences.html
-                localStorage.setItem('group_idx', groupIdx);
-
-                // Store group_idx in Firestore for traceability
-                db.collection('users').doc(userId).set({
-                    email: userCredential.user.email,
-                    group_idx: groupIdx,
-                    last_login: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true })  // merge: true to avoid overwriting other fields if they exist
-                .then(() => {
-                    console.log("User logged in:", userCredential.user);
-
-                    // Redirect to preferences.html
-                    window.location.href = 'preferences.html';
-                })
-                .catch((error) => {
-                    console.error("Error storing group_idx in Firestore:", error);
-                });
+                // Redirect to preferences.html
+                window.location.href = 'preferences.html';
             })
             .catch((error) => {
                 console.error("Error logging in:", error);
                 alert("Error logging in: " + error.message);
             });
         });
-
-        function hashStringToInt(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = (hash << 5) - hash + char;
-                hash |= 0; // Convert to 32bit integer
-            }
-            return Math.abs(hash);
-        }
     </script>
 </body>
 </html>
