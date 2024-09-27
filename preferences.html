@@ -188,12 +188,13 @@
 </head>
 <body>
     <button id="jump2new-btn" style="display: none;">Jump to Unanswered</button>
+
     <h1 id="survey-title"></h1>
     <img id="pdf-image" src="" alt="PDF Snippet">
-
+    
     <!-- Diff Section -->
     <div id="diff-container"></div>
-
+    
     <div class="text-box-container">
         <div class="text-box" id="text1"></div>
         <button id="diff-btn">=</button>
@@ -225,34 +226,26 @@
             appId: "1:187427222726:web:50d39367fb95b78cdcd3c7",
             measurementId: "G-FLKV3XGQ1M"
         };
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // Global Variables
+        // Get groupIdx from localStorage
+        const groupIdx = localStorage.getItem('groupIdx');
         let currentUser = null;
         let diffBtnActive = false;
-        let totalItems = 0;
-        let currentIndex = 0;
-        const text1Elem = document.getElementById('text1');
-        const text2Elem = document.getElementById('text2');
-        const goForwardBtn = document.getElementById('go-forward');
-
-        // Disable the "Go Forward" button initially
-        goForwardBtn.disabled = true;
+        let totalItems = 0;  // To track the number of items
 
         auth.onAuthStateChanged(function(user) {
             if (user) {
                 currentUser = user;
                 console.log("User logged in: ", user.email);
 
-                // Get groupIdx from localStorage
-                const groupIdx = localStorage.getItem('groupIdx');
-
-                // fetch total items count from the correct collection in Firestore
+                // Fetch total items count from Firestore
                 db.collection(`user_group_${groupIdx}`).get().then((querySnapshot) => {
-                    totalItems = querySnapshot.size;  // Set totalItems to the number of documents
-                    loadFirstUnansweredItem(groupIdx);  // Only proceed after totalItems is assigned
+                    totalItems = querySnapshot.size;
+                    loadFirstUnansweredItem();  // Only proceed after totalItems is assigned
                 }).catch((error) => {
                     console.error("Error retrieving total items:", error);
                 });
@@ -261,8 +254,16 @@
             }
         });
 
+        let currentIndex = 0;  // Default to document with id=0
+        const text1Elem = document.getElementById('text1');
+        const text2Elem = document.getElementById('text2');
+        const goForwardBtn = document.getElementById('go-forward');
+
+        // Disable the "Go Forward" button initially
+        goForwardBtn.disabled = true;
+
         // Function to load the first unannotated item
-        function loadFirstUnansweredItem(groupIdx) {
+        function loadFirstUnansweredItem() {
             if (currentUser) {
                 const userEmail = currentUser.email;
 
@@ -276,7 +277,7 @@
                     for (let i = 0; i < totalItems; i++) {
                         if (!answeredItems.includes(i)) {
                             currentIndex = i;  // Update the currentIndex to the first unanswered item
-                            loadDocument(currentIndex, groupIdx);  // Load the first unanswered document
+                            loadDocument(currentIndex);  // Load the first unanswered document
                             break;
                         }
                     }
@@ -289,16 +290,14 @@
             }
         }
 
-        // Function to load a document based on the current index and groupIdx
-        function loadDocument(index, groupIdx) {
+        // Load document data based on current index
+        function loadDocument(index) {
             db.collection(`user_group_${groupIdx}`).where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (data.text && data.text[0] && data.text[1] && data.url && data.diffs) {
-                        const originalText1 = data.text[0];
-                        const originalText2 = data.text[1];
-                        text1Elem.innerText = originalText1;
-                        text2Elem.innerText = originalText2;
+                    if (data.texts && data.texts[0] && data.texts[1] && data.url && data.diff) {
+                        text1Elem.innerText = data.texts[0];
+                        text2Elem.innerText = data.texts[1];
 
                         const oldPdfImageElem = document.getElementById('pdf-image');
 
@@ -334,10 +333,10 @@
                         });
 
                         // Check for the user's previous choice
-                        highlightPreviousChoice(index, groupIdx);
+                        highlightPreviousChoice(index);
 
-                        // Store the diffs for later use
-                        text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
+                        // Store the diff for later use
+                        text1Elem.setAttribute('data-diff', data.diff);
 
                         // Show or hide buttons based on currentIndex
                         toggleButtonVisibility();
@@ -351,7 +350,7 @@
         }
 
         // Function to check and highlight the user's previous choice
-        function highlightPreviousChoice(pairIndex, groupIdx) {
+        function highlightPreviousChoice(pairIndex) {
             const docId = `user_${currentUser.uid}_pair_${pairIndex}`;
 
             db.collection(`user_preferences_${groupIdx}`).doc(docId).get().then((doc) => {
@@ -374,143 +373,8 @@
             });
         }
 
-        function updateButtonVisibility() {
-            const goBackBtn = document.getElementById('go-back');
-            const goForwardBtn = document.getElementById('go-forward');
-
-            // Always show Go Forward on first load
-            goForwardBtn.style.display = 'block';
-
-            // Hide Go Back if it's the first item
-            if (currentIndex === 0) {
-                goBackBtn.style.display = 'none';
-            } else {
-                goBackBtn.style.display = 'block';
-            }
-
-            // Hide Go Forward if it's the last item
-            if (currentIndex >= totalItems - 1) {
-                goForwardBtn.style.display = 'none';
-            } else {
-                goForwardBtn.style.display = 'block';
-            }
-        }
-
-        // Function to show or hide the "Go Forward" and "Go Backward" buttons
-        function toggleButtonVisibility() {
-            const goForwardBtn = document.getElementById('go-forward');
-            const goBackBtn = document.getElementById('go-back');
-
-            // Hide "Go Forward" if at the last item, otherwise show it
-            if (currentIndex >= totalItems - 1) {
-                goForwardBtn.style.visibility = 'hidden';
-            } else {
-                goForwardBtn.style.visibility = 'visible';
-            }
-
-            // Hide "Go Back" if at the first item, otherwise show it
-            if (currentIndex <= 0) {
-                goBackBtn.style.visibility = 'hidden';
-            } else {
-                goBackBtn.style.visibility = 'visible';
-            }
-        }
-
-        // Load the first document by default
-        loadDocument(currentIndex);
-
-        // Diff button event listener
-        const diffBtn = document.getElementById('diff-btn');
-        diffBtn.addEventListener('click', function() {
-            diffBtn.classList.toggle('active');
-            diffBtnActive = diffBtn.classList.contains('active');
-
-            if (diffBtnActive) {
-                highlightCommonSubstrings();
-            } else {
-                text1Elem.innerText = text1Elem.getAttribute('data-original-text');
-                text2Elem.innerText = text2Elem.getAttribute('data-original-text');
-            }
-        });
-
-        // Highlight common substrings based on the stored diffs
-        function highlightCommonSubstrings() {
-            const diffs = JSON.parse(text1Elem.getAttribute('data-diffs'));
-
-            let highlightedText1 = '';
-            let highlightedText2 = '';
-
-            diffs.forEach((diff) => {
-                if (diff.type === 'equal') {
-                    highlightedText1 += `<span class="highlight">${diff.text}</span>`;
-                    highlightedText2 += `<span class="highlight">${diff.text}</span>`;
-                } else if (diff.type === 'delete') {
-                    highlightedText1 += diff.text;
-                } else if (diff.type === 'insert') {
-                    highlightedText2 += diff.text;
-                }
-            });
-
-            text1Elem.innerHTML = highlightedText1;
-            text2Elem.innerHTML = highlightedText2;
-        }
-
-        // Function to reset button states when navigating forward or backward
-        function resetButtons() {
-            const allButtons = document.querySelectorAll('.green-btn, .white-btn');
-            allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
-            goForwardBtn.disabled = true;  // Disable "Go Forward" again until new choice is made
-        }
-
-        // Function to show an error message if "Go Forward" is clicked when disabled
-        function showError() {
-            alert(`I'm sorry, ${currentUser.email}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.`);
-        }
-
-        // Handle the "Go Forward" button click event
-        document.getElementById('go-forward').addEventListener('click', () => {
-            const groupIdx = localStorage.getItem('groupIdx');
-            if (typeof totalItems === 'undefined' || totalItems === 0) {
-                console.error("Total items not set.");
-                return;
-            }
-
-            if (currentIndex < totalItems - 1) {
-                currentIndex++;
-                loadDocument(currentIndex, groupIdx);
-                resetButtons();
-
-                if (diffBtnActive) {
-                    diffBtn.classList.add('active');
-                    highlightCommonSubstrings();
-                } else {
-                    diffBtn.classList.remove('active');
-                }
-            } else {
-                showEndOfLineModal();  // Show the modal when reaching the last item
-            }
-        });
-
-        // Handle the "Go Back" button click event
-        document.getElementById('go-back').addEventListener('click', () => {
-            const groupIdx = localStorage.getItem('groupIdx');
-            if (currentIndex > 0) {
-                currentIndex--;
-                loadDocument(currentIndex, groupIdx);
-                resetButtons();
-
-                if (diffBtnActive) {
-                    diffBtn.classList.add('active');
-                    highlightCommonSubstrings();
-                } else {
-                    diffBtn.classList.remove('active');
-                }
-            }
-        });
-        
         // Logging user choices and updating progress if it was the first choice
         function logUserChoice(choice) {
-            const groupIdx = localStorage.getItem('groupIdx');
             const docId = `user_${currentUser.uid}_pair_${currentIndex}`;
 
             db.collection(`user_preferences_${groupIdx}`).doc(docId).get().then((doc) => {
@@ -602,6 +466,26 @@
             }
         });
 
+        // Function to show or hide the "Go Forward" and "Go Backward" buttons
+        function toggleButtonVisibility() {
+            const goForwardBtn = document.getElementById('go-forward');
+            const goBackBtn = document.getElementById('go-back');
+
+            // Hide "Go Forward" if at the last item, otherwise show it
+            if (currentIndex >= totalItems - 1) {
+                goForwardBtn.style.visibility = 'hidden';
+            } else {
+                goForwardBtn.style.visibility = 'visible';
+            }
+
+            // Hide "Go Back" if at the first item, otherwise show it
+            if (currentIndex <= 0) {
+                goBackBtn.style.visibility = 'hidden';
+            } else {
+                goBackBtn.style.visibility = 'visible';
+            }
+        }
+
         // Show the "End of Line" modal when no more items are available
         function showEndOfLineModal() {
             const modal = document.getElementById('endOfLineModal');
@@ -615,13 +499,100 @@
         // Show the "Jump2new" button based on progress
         function toggleJump2newButton(selectionsMade, totalItems) {
             const jump2newBtn = document.getElementById('jump2new-btn');
-            
             if (selectionsMade < totalItems) {
                 jump2newBtn.style.display = 'block';  // Show the button
             } else {
                 jump2newBtn.style.display = 'none';  // Hide the button
             }
         }
+
+        // Function to reset button states when navigating forward or backward
+        function resetButtons() {
+            const allButtons = document.querySelectorAll('.green-btn, .white-btn');
+            allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
+            goForwardBtn.disabled = true;  // Disable "Go Forward" again until new choice is made
+        }
+
+        // Handle the "Go Forward" button click event
+        document.getElementById('go-forward').addEventListener('click', () => {
+            if (currentIndex < totalItems - 1) {
+                currentIndex++;
+                loadDocument(currentIndex);
+                resetButtons();
+
+                if (diffBtnActive) {
+                    document.getElementById('diff-btn').classList.add('active');
+                    highlightCommonSubstrings();
+                } else {
+                    document.getElementById('diff-btn').classList.remove('active');
+                }
+            } else {
+                showEndOfLineModal();  // Show the modal when reaching the last item
+            }
+        });
+
+        // Handle the "Go Back" button click event
+        document.getElementById('go-back').addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadDocument(currentIndex);
+                resetButtons();
+
+                if (diffBtnActive) {
+                    document.getElementById('diff-btn').classList.add('active');
+                    highlightCommonSubstrings();
+                } else {
+                    document.getElementById('diff-btn').classList.remove('active');
+                }
+            }
+        });
+
+        // Highlight common substrings based on the stored diff
+        function highlightCommonSubstrings() {
+            const diff = text1Elem.getAttribute('data-diff');
+
+            let highlightedText1 = '';
+            let highlightedText2 = '';
+
+            // Assuming `diff` contains some relevant information for the diffs
+            // Apply diff logic here (implement based on your needs)
+            // Example:
+            if (diff) {
+                highlightedText1 = `<span class="highlight">${diff}</span>`;
+                highlightedText2 = `<span class="highlight">${diff}</span>`;
+            }
+
+            text1Elem.innerHTML = highlightedText1;
+            text2Elem.innerHTML = highlightedText2;
+        }
+
+        // Wait for the DOM content to be fully loaded
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const modal = document.getElementById('endOfLineModal');
+            const closeBtn = document.querySelector('.close-btn');
+
+            // Make sure "Go Forward" button is shown on load
+            const goForwardBtn = document.getElementById('go-forward');
+            goForwardBtn.style.display = 'block';  // Ensure Go Forward is visible initially
+
+            // Also update the visibility of the Go Back button if necessary
+            toggleButtonVisibility(); // Call the function that handles visibility logic
+
+            if (modal && closeBtn) {
+                closeBtn.onclick = function() {
+                    modal.style.display = "none";
+                };
+
+                window.onclick = function(event) {
+                    if (event.target === modal) {
+                        modal.style.display = "none";
+                    }
+                };
+            } else {
+                console.error("Modal or close button not found in the DOM.");
+            }
+        });
+
     </script>
 
     <!-- End of Line Modal -->
@@ -631,5 +602,6 @@
             <p>You have reached the end of the items. Please come back later or review previous items.</p>
         </div>
     </div>
+
 </body>
 </html>
