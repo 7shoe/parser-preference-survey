@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preferences</title>
     <style>
@@ -187,9 +187,9 @@
     </style>
 </head>
 <body>
-    <button id="jump2new-btn" style="display: none;">Jump to Unanswered</button>
+    <button id="jump2new-btn" style="position: fixed; top: 10px; right: 10px; padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; display: none;">Jump2new</button>
 
-    <h1 id="survey-title"></h1>
+    <h1 id="survey-title" style="font-family: Helvetica, Arial, sans-serif; color: white; text-align: center;"></h1>
     <img id="pdf-image" src="" alt="PDF Snippet">
     
     <!-- Diff Section -->
@@ -229,22 +229,21 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const auth = firebase.auth();
+        const auth = firebase.auth();         // init Firebase auth
 
-        // Get groupIdx from localStorage
-        const groupIdx = localStorage.getItem('groupIdx');
+        // check if a user is logged in
         let currentUser = null;
         let diffBtnActive = false;
         let totalItems = 0;  // To track the number of items
 
         auth.onAuthStateChanged(function(user) {
             if (user) {
-                currentUser = user;
+                currentUser = user;  // Get the current authenticated user
                 console.log("User logged in: ", user.email);
 
-                // Fetch total items count from Firestore
-                db.collection(`user_group_${groupIdx}`).get().then((querySnapshot) => {
-                    totalItems = querySnapshot.size;
+                // fetch total items count from Firestore
+                db.collection('four_sample_imgs').get().then((querySnapshot) => {
+                    totalItems = querySnapshot.size;  // Set totalItems to the number of documents
                     loadFirstUnansweredItem();  // Only proceed after totalItems is assigned
                 }).catch((error) => {
                     console.error("Error retrieving total items:", error);
@@ -254,6 +253,7 @@
             }
         });
 
+
         let currentIndex = 0;  // Default to document with id=0
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
@@ -262,12 +262,32 @@
         // Disable the "Go Forward" button initially
         goForwardBtn.disabled = true;
 
+        // Fetch data based on current index
+        let originalText1 = '';
+        let originalText2 = '';
+
+        // Handle the "Jump2new" button
+        document.getElementById('jump2new-btn').addEventListener('click', function() {
+            loadFirstUnansweredItem();  // Jump to the first unannotated item
+        });
+
+        // Show or hide the "Jump2new" button based on progress
+        function toggleJump2newButton(selectionsMade, totalItems) {
+            const jump2newBtn = document.getElementById('jump2new-btn');
+            
+            if (selectionsMade < totalItems) {
+                jump2newBtn.style.display = 'block';  // Show the button
+            } else {
+                jump2newBtn.style.display = 'none';  // Hide the button
+            }
+        }
+
         // Function to load the first unannotated item
         function loadFirstUnansweredItem() {
             if (currentUser) {
                 const userEmail = currentUser.email;
 
-                db.collection(`user_preferences_${groupIdx}`).where('userName', '==', userEmail).get()
+                db.collection('user_preferences').where('userName', '==', userEmail).get()
                 .then((querySnapshot) => {
                     let answeredItems = [];
                     querySnapshot.forEach((doc) => {
@@ -290,14 +310,16 @@
             }
         }
 
-        // Load document data based on current index
+        // Existing loadDocument function
         function loadDocument(index) {
-            db.collection(`user_group_${groupIdx}`).where('id', '==', index).get().then((querySnapshot) => {
+            db.collection('four_sample_imgs').where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (data.texts && data.texts[0] && data.texts[1] && data.url && data.diff) {
-                        text1Elem.innerText = data.texts[0];
-                        text2Elem.innerText = data.texts[1];
+                    if (data.text && data.text[0] && data.text[1] && data.url && data.diffs) {
+                        originalText1 = data.text[0];
+                        originalText2 = data.text[1];
+                        text1Elem.innerText = originalText1;
+                        text2Elem.innerText = originalText2;
 
                         const oldPdfImageElem = document.getElementById('pdf-image');
 
@@ -317,7 +339,7 @@
                         });
 
                         // Update the headline with progress
-                        db.collection(`user_preferences_${groupIdx}`)
+                        db.collection('user_preferences')
                         .where('userName', '==', currentUser.email)
                         .get()
                         .then((querySnapshot) => {
@@ -335,8 +357,8 @@
                         // Check for the user's previous choice
                         highlightPreviousChoice(index);
 
-                        // Store the diff for later use
-                        text1Elem.setAttribute('data-diff', data.diff);
+                        // Store the diffs for later use
+                        text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
 
                         // Show or hide buttons based on currentIndex
                         toggleButtonVisibility();
@@ -353,7 +375,7 @@
         function highlightPreviousChoice(pairIndex) {
             const docId = `user_${currentUser.uid}_pair_${pairIndex}`;
 
-            db.collection(`user_preferences_${groupIdx}`).doc(docId).get().then((doc) => {
+            db.collection('user_preferences').doc(docId).get().then((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
                     const choice = data.choice;
@@ -373,13 +395,149 @@
             });
         }
 
+        function updateButtonVisibility() {
+            const goBackBtn = document.getElementById('go-back');
+            const goForwardBtn = document.getElementById('go-forward');
+
+            // Always show Go Forward on first load
+            goForwardBtn.style.display = 'block';
+
+            // Hide Go Back if it's the first item
+            if (currentIndex === 0) {
+                goBackBtn.style.display = 'none';
+            } else {
+                goBackBtn.style.display = 'block';
+            }
+
+            // Hide Go Forward if it's the last item
+            if (currentIndex >= totalItems - 1) {
+                goForwardBtn.style.display = 'none';
+            } else {
+                goForwardBtn.style.display = 'block';
+            }
+        }
+
+        // Function to show or hide the "Go Forward" and "Go Backward" buttons
+        function toggleButtonVisibility() {
+            const goForwardBtn = document.getElementById('go-forward');
+            const goBackBtn = document.getElementById('go-back');
+
+            // Hide "Go Forward" if at the last item, otherwise show it
+            if (currentIndex >= totalItems - 1) {
+                goForwardBtn.style.visibility = 'hidden';
+            } else {
+                goForwardBtn.style.visibility = 'visible';
+            }
+
+            // Hide "Go Back" if at the first item, otherwise show it
+            if (currentIndex <= 0) {
+                goBackBtn.style.visibility = 'hidden';
+            } else {
+                goBackBtn.style.visibility = 'visible';
+            }
+        }
+
+        // Load the first document by default
+        loadDocument(currentIndex);
+
+        // Diff button event listener
+        const diffBtn = document.getElementById('diff-btn');
+        diffBtn.addEventListener('click', function() {
+            diffBtn.classList.toggle('active');
+            diffBtnActive = diffBtn.classList.contains('active');
+
+            if (diffBtnActive) {
+                highlightCommonSubstrings();
+            } else {
+                text1Elem.innerText = originalText1;  // Reset directly
+                text2Elem.innerText = originalText2;
+            }
+        });
+
+        // Highlight common substrings based on the stored diffs
+        function highlightCommonSubstrings() {
+            const diffs = JSON.parse(text1Elem.getAttribute('data-diffs'));
+
+            let highlightedText1 = '';
+            let highlightedText2 = '';
+
+            diffs.forEach((diff) => {
+                if (diff.type === 'equal') {
+                    highlightedText1 += `<span class="highlight">${diff.text}</span>`;
+                    highlightedText2 += `<span class="highlight">${diff.text}</span>`;
+                } else if (diff.type === 'delete') {
+                    highlightedText1 += diff.text;
+                } else if (diff.type === 'insert') {
+                    highlightedText2 += diff.text;
+                }
+            });
+
+            text1Elem.innerHTML = highlightedText1;
+            text2Elem.innerHTML = highlightedText2;
+        }
+
+        // Function to reset button states when navigating forward or backward
+        function resetButtons() {
+            const allButtons = document.querySelectorAll('.green-btn, .white-btn');
+            allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
+            goForwardBtn.disabled = true;  // Disable "Go Forward" again until new choice is made
+        }
+
+        // Function to show an error message if "Go Forward" is clicked when disabled
+        function showError() {
+            alert(`I'm sorry, ${currentUser.email}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.`);
+        }
+
+        // Handle the "Go Forward" button click event
+        document.getElementById('go-forward').addEventListener('click', () => {
+            // Ensure `totalItems` is set before proceeding
+            if (typeof totalItems === 'undefined' || totalItems === 0) {
+                console.error("Total items not set.");
+                return;
+            }
+
+            if (currentIndex < totalItems - 1) {
+                currentIndex++;
+                loadDocument(currentIndex);
+                resetButtons();
+
+                if (diffBtnActive) {
+                    diffBtn.classList.add('active');
+                    highlightCommonSubstrings();
+                } else {
+                    diffBtn.classList.remove('active');
+                }
+            } else {
+                showEndOfLineModal();  // Show the modal when reaching the last item
+            }
+        });
+
+
+        // Handle the "Go Back" button click event
+        document.getElementById('go-back').addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadDocument(currentIndex);
+                resetButtons();
+
+                if (diffBtnActive) {
+                    diffBtn.classList.add('active');
+                    highlightCommonSubstrings();
+                } else {
+                    diffBtn.classList.remove('active');
+                }
+            }
+        });
+        
         // Logging user choices and updating progress if it was the first choice
         function logUserChoice(choice) {
             const docId = `user_${currentUser.uid}_pair_${currentIndex}`;
-
-            db.collection(`user_preferences_${groupIdx}`).doc(docId).get().then((doc) => {
+            
+            // Check if the current item already has a logged choice
+            db.collection('user_preferences').doc(docId).get().then((doc) => {
                 if (!doc.exists) {
-                    db.collection(`user_preferences_${groupIdx}`).doc(docId).set({
+                    // If the document does not exist, log the choice and update the progress
+                    db.collection('user_preferences').doc(docId).set({
                         userName: currentUser.email,
                         choice: choice,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -388,7 +546,7 @@
                         console.log("User preference logged:", choice);
 
                         // Increment the selection count and update the headline
-                        db.collection(`user_preferences_${groupIdx}`)
+                        db.collection('user_preferences')
                         .where('userName', '==', currentUser.email)
                         .get()
                         .then((querySnapshot) => {
@@ -463,107 +621,35 @@
             } else if (event.key === ' ') {  // Handle spacebar for diff button
                 event.preventDefault();  // Prevent the default behavior (scrolling)
                 document.getElementById('diff-btn').click();  // Trigger the diff button click
-            }
+            } 
         });
 
-        // Function to show or hide the "Go Forward" and "Go Backward" buttons
-        function toggleButtonVisibility() {
-            const goForwardBtn = document.getElementById('go-forward');
-            const goBackBtn = document.getElementById('go-back');
+        // Forward user to un-picked preferences
+        function loadFirstUnansweredItem() {
+            if (currentUser) {
+                const userEmail = currentUser.email;
 
-            // Hide "Go Forward" if at the last item, otherwise show it
-            if (currentIndex >= totalItems - 1) {
-                goForwardBtn.style.visibility = 'hidden';
+                db.collection('user_preferences').where('userName', '==', userEmail).get()
+                .then((querySnapshot) => {
+                    let answeredItems = [];
+                    querySnapshot.forEach((doc) => {
+                        answeredItems.push(doc.data().pairIndex);
+                    });
+
+                    for (let i = 0; i < totalItems; i++) {
+                        if (!answeredItems.includes(i)) {
+                            currentIndex = i;  // Update the currentIndex to the first unanswered item
+                            loadDocument(currentIndex);  // Load the first unanswered document
+                            break;
+                        }
+                    }
+                }).catch((error) => {
+                    console.error("Error loading unanswered items:", error);
+                });
             } else {
-                goForwardBtn.style.visibility = 'visible';
+                console.error("No user authenticated.");
+                window.location.href = 'login.html';  // Redirect to login if no user is logged in
             }
-
-            // Hide "Go Back" if at the first item, otherwise show it
-            if (currentIndex <= 0) {
-                goBackBtn.style.visibility = 'hidden';
-            } else {
-                goBackBtn.style.visibility = 'visible';
-            }
-        }
-
-        // Show the "End of Line" modal when no more items are available
-        function showEndOfLineModal() {
-            const modal = document.getElementById('endOfLineModal');
-            if (modal) {
-                modal.style.display = "block";
-            } else {
-                console.error("Modal not found.");
-            }
-        }
-
-        // Show the "Jump2new" button based on progress
-        function toggleJump2newButton(selectionsMade, totalItems) {
-            const jump2newBtn = document.getElementById('jump2new-btn');
-            if (selectionsMade < totalItems) {
-                jump2newBtn.style.display = 'block';  // Show the button
-            } else {
-                jump2newBtn.style.display = 'none';  // Hide the button
-            }
-        }
-
-        // Function to reset button states when navigating forward or backward
-        function resetButtons() {
-            const allButtons = document.querySelectorAll('.green-btn, .white-btn');
-            allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
-            goForwardBtn.disabled = true;  // Disable "Go Forward" again until new choice is made
-        }
-
-        // Handle the "Go Forward" button click event
-        document.getElementById('go-forward').addEventListener('click', () => {
-            if (currentIndex < totalItems - 1) {
-                currentIndex++;
-                loadDocument(currentIndex);
-                resetButtons();
-
-                if (diffBtnActive) {
-                    document.getElementById('diff-btn').classList.add('active');
-                    highlightCommonSubstrings();
-                } else {
-                    document.getElementById('diff-btn').classList.remove('active');
-                }
-            } else {
-                showEndOfLineModal();  // Show the modal when reaching the last item
-            }
-        });
-
-        // Handle the "Go Back" button click event
-        document.getElementById('go-back').addEventListener('click', () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                loadDocument(currentIndex);
-                resetButtons();
-
-                if (diffBtnActive) {
-                    document.getElementById('diff-btn').classList.add('active');
-                    highlightCommonSubstrings();
-                } else {
-                    document.getElementById('diff-btn').classList.remove('active');
-                }
-            }
-        });
-
-        // Highlight common substrings based on the stored diff
-        function highlightCommonSubstrings() {
-            const diff = text1Elem.getAttribute('data-diff');
-
-            let highlightedText1 = '';
-            let highlightedText2 = '';
-
-            // Assuming `diff` contains some relevant information for the diffs
-            // Apply diff logic here (implement based on your needs)
-            // Example:
-            if (diff) {
-                highlightedText1 = `<span class="highlight">${diff}</span>`;
-                highlightedText2 = `<span class="highlight">${diff}</span>`;
-            }
-
-            text1Elem.innerHTML = highlightedText1;
-            text2Elem.innerHTML = highlightedText2;
         }
 
         // Wait for the DOM content to be fully loaded
@@ -576,7 +662,7 @@
             goForwardBtn.style.display = 'block';  // Ensure Go Forward is visible initially
 
             // Also update the visibility of the Go Back button if necessary
-            toggleButtonVisibility(); // Call the function that handles visibility logic
+            updateButtonVisibility(); // Call the function that handles visibility logic
 
             if (modal && closeBtn) {
                 closeBtn.onclick = function() {
@@ -593,15 +679,44 @@
             }
         });
 
+        // Show the "End of Line" modal when no more items are available
+        function showEndOfLineModal() {
+            const modal = document.getElementById('endOfLineModal');
+            if (modal) {
+                modal.style.display = "block";
+            } else {
+                console.error("Modal not found.");
+            }
+        }
+
+        // Show the "End of Line" modal when no more items are available
+        function showEndOfLineModal() {
+            modal.style.display = "block";
+        }
+
+        // End of Line Modal
+        const modal = document.getElementById('endOfLineModal');
+        const closeBtn = document.querySelector('.close-btn');
+
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+        };
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+
     </script>
 
-    <!-- End of Line Modal -->
-    <div id="endOfLineModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <p>You have reached the end of the items. Please come back later or review previous items.</p>
-        </div>
+<!-- End of Line Modal -->
+<div id="endOfLineModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <p>You have reached the end of the items. Please come back later or review previous items.</p>
     </div>
+</div>
 
 </body>
 </html>
