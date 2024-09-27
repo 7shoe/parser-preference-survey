@@ -231,8 +231,9 @@
         const db = firebase.firestore();
         const auth = firebase.auth();         // init Firebase auth
 
-        // check if a user is logged in
+        // Variables to track the user and group index
         let currentUser = null;
+        let groupIndex = null;
         let diffBtnActive = false;
         let totalItems = 0;  // To track the number of items
 
@@ -241,8 +242,11 @@
                 currentUser = user;  // Get the current authenticated user
                 console.log("User logged in: ", user.email);
 
-                // fetch total items count from Firestore
-                db.collection('four_sample_imgs').get().then((querySnapshot) => {
+                // Calculate the group index based on user ID
+                groupIndex = user.uid % 12;
+
+                // fetch total items count from Firestore for the correct user group
+                db.collection(`user_group_${groupIndex}`).get().then((querySnapshot) => {
                     totalItems = querySnapshot.size;  // Set totalItems to the number of documents
                     loadFirstUnansweredItem();  // Only proceed after totalItems is assigned
                 }).catch((error) => {
@@ -252,7 +256,6 @@
                 window.location.href = 'login.html';  // Redirect to login if no user is logged in
             }
         });
-
 
         let currentIndex = 0;  // Default to document with id=0
         const text1Elem = document.getElementById('text1');
@@ -311,13 +314,14 @@
         }
 
         // Existing loadDocument function
+        // Existing loadDocument function modified to use dynamic collection
         function loadDocument(index) {
-            db.collection('four_sample_imgs').where('id', '==', index).get().then((querySnapshot) => {
+            db.collection(`user_group_${groupIndex}`).where('id', '==', index).get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (data.text && data.text[0] && data.text[1] && data.url && data.diffs) {
-                        originalText1 = data.text[0];
-                        originalText2 = data.text[1];
+                    if (data.texts && data.texts[0] && data.texts[1] && data.url && data.diff) {
+                        originalText1 = data.texts[0];
+                        originalText2 = data.texts[1];
                         text1Elem.innerText = originalText1;
                         text2Elem.innerText = originalText2;
 
@@ -339,7 +343,7 @@
                         });
 
                         // Update the headline with progress
-                        db.collection('user_preferences')
+                        db.collection(`user_preferences_${groupIndex}`)
                         .where('userName', '==', currentUser.email)
                         .get()
                         .then((querySnapshot) => {
@@ -358,7 +362,7 @@
                         highlightPreviousChoice(index);
 
                         // Store the diffs for later use
-                        text1Elem.setAttribute('data-diffs', JSON.stringify(data.diffs));
+                        text1Elem.setAttribute('data-diffs', JSON.stringify(data.diff));
 
                         // Show or hide buttons based on currentIndex
                         toggleButtonVisibility();
