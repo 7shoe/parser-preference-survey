@@ -241,13 +241,16 @@
             if (user) {
                 currentUser = user;  // Get the current authenticated user
                 console.log("User logged in: ", user.email);
+                console.log("User UID: ", user.uid);
 
                 // Calculate the group index based on user ID
                 groupIndex = user.uid % 12;
-
+                console.log("User Group Index: ", groupIndex);
+                
                 // fetch total items count from Firestore for the correct user group
                 db.collection(`user_group_${groupIndex}`).get().then((querySnapshot) => {
                     totalItems = querySnapshot.size;  // Set totalItems to the number of documents
+                    console.log("Total items: ", totalItems);
                     loadFirstUnansweredItem();  // Only proceed after totalItems is assigned
                 }).catch((error) => {
                     console.error("Error retrieving total items:", error);
@@ -256,6 +259,7 @@
                 window.location.href = 'login.html';  // Redirect to login if no user is logged in
             }
         });
+
 
         let currentIndex = 0;  // Default to document with id=0
         const text1Elem = document.getElementById('text1');
