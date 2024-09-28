@@ -192,6 +192,12 @@
             text-decoration: none;
             cursor: pointer;
         }
+
+        /* Green highlight effect */
+        .green-highlight {
+            color: #00FF00; /* Bright green */
+            transition: color var(--timeFadeInGreen) ease-in, color var(--timeFadeOutGreen) ease-out;
+        }
     </style>
 </head>
 <body>
@@ -208,6 +214,10 @@
         <button id="diff-btn">=</button>
         <div class="text-box" id="text2"></div>
     </div>
+
+    <!-- New progress summary -->
+    <div id="progress-summary" style="text-align: center; font-size: 14px; color: lightgrey; margin: 10px 0;"></div>
+
     <div class="buttons">
         <button class="green-btn" id="prefer-left">I prefer this</button>
         <button class="white-btn" id="neither">Neither</button>
@@ -244,6 +254,10 @@
         let groupIndex = null;
         let diffBtnActive = false;
         let totalItems = 0;  // To track the number of items
+
+        const timeFadeInGreen = 100;  // milliseconds
+        const timeStayGreen = 100;    // milliseconds
+        const timeFadeOutGreen = 100; // milliseconds
 
         auth.onAuthStateChanged(function(user) {
             if (user) {
@@ -288,8 +302,6 @@
                 window.location.href = 'login.html';  // Redirect to login if no user is logged in
             }
         });
-
-
 
         let currentIndex = 0;  // Default to document with id=0
         const text1Elem = document.getElementById('text1');
@@ -390,14 +402,15 @@
                         .get()
                         .then((querySnapshot) => {
                             const selectionsMade = querySnapshot.size;  // Number of documents in 'user_preferences'
-                            document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1} (Progress: ${selectionsMade}/${totalItems})`;
-
-                            // Show or hide the "Jump2new" button
-                            toggleJump2newButton(selectionsMade, totalItems);
+                            document.getElementById('survey-title').innerText = `PDF #${index + 1} (Progress: ${selectionsMade}/${totalItems})`;
+                            document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;  // Update the new div
+                            highlightProgressText();  // Highlight the progress text
+                            toggleJump2newButton(selectionsMade, totalItems); // Show/hide the Jump2new button
                         })
                         .catch((error) => {
                             console.error("Error retrieving user preferences count:", error);
-                            document.getElementById('survey-title').innerText = `Survey: PDF #${index + 1}`;
+                            document.getElementById('survey-title').innerText = `PDF #${index + 1}`;
+                            document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;
                         });
 
                         // Check for the user's previous choice
@@ -431,9 +444,11 @@
 
         // Function to check and highlight the user's previous choice
         function highlightPreviousChoice(pairIndex) {
+            resetButtons();  // Ensure buttons are reset before checking for previous choices
+
             const docId = `user_${currentUser.uid}_pair_${pairIndex}`;
 
-            db.collection('user_preferences').doc(docId).get().then((doc) => {
+            db.collection(`user_preferences_${groupIndex}`).doc(docId).get().then((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
                     const choice = data.choice;
@@ -534,11 +549,27 @@
             text2Elem.innerHTML = highlightedText2;
         }
 
-        // Function to reset button states when navigating forward or backward
+        // Function to reset button states to avoid incorrect highlighting
         function resetButtons() {
             const allButtons = document.querySelectorAll('.green-btn, .white-btn');
             allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
             goForwardBtn.disabled = true;  // Disable "Go Forward" again until new choice is made
+        }
+
+        // Function to highlight the progress text
+        function highlightProgressText() {
+            const topProgressText = document.getElementById('survey-title');
+            const bottomProgressText = document.getElementById('progress-summary');
+
+            // Add the green highlight class
+            topProgressText.classList.add('green-highlight');
+            bottomProgressText.classList.add('green-highlight');
+
+            // Remove the highlight after the specified time
+            setTimeout(() => {
+                topProgressText.classList.remove('green-highlight');
+                bottomProgressText.classList.remove('green-highlight');
+            }, timeFadeInGreen + timeStayGreen + timeFadeOutGreen);
         }
 
         // Function to show an error message if "Go Forward" is clicked when disabled
@@ -546,48 +577,25 @@
             alert(`I'm sorry, ${currentUser.email}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.`);
         }
 
+        // Function to show the loading modal
+        function showLoadingModal() {
+            const loadingModal = document.getElementById('loadingModal');
+            loadingModal.style.display = "block";
+        }
+
+        // Function to hide the loading modal
+        function hideLoadingModal() {
+            const loadingModal = document.getElementById('loadingModal');
+            loadingModal.style.display = "none";
+        }
+
         // Handle the "Go Forward" button click event
         document.getElementById('go-forward').addEventListener('click', () => {
-            // Ensure `totalItems` is set before proceeding
-            if (typeof totalItems === 'undefined' || totalItems === 0) {
-                console.error("Total items not set.");
-                return;
-            }
-
-            // Check the number of annotations made by the user
-            db.collection(`user_preferences_${groupIndex}`)
-            .where('userName', '==', currentUser.email)
-            .get()
-            .then((querySnapshot) => {
-                const selectionsMade = querySnapshot.size; // Number of annotated items
-
-                if (selectionsMade < totalItems) {
-                    currentIndex++;
-                    loadDocument(currentIndex);
-                    resetButtons();
-
-                    if (diffBtnActive) {
-                        diffBtn.classList.add('active');
-                        highlightCommonSubstrings();
-                    } else {
-                        diffBtn.classList.remove('active');
-                    }
-                } else {
-                    showEndOfLineModal();  // Show the modal when reaching the last item
-                }
-            })
-            .catch((error) => {
-                console.error("Error checking user annotations:", error);
-            });
-        });
-
-
-        // Handle the "Go Back" button click event
-        document.getElementById('go-back').addEventListener('click', () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                loadDocument(currentIndex);
-                resetButtons();
+            showLoadingModal();
+            setTimeout(() => {
+                loadDocument(currentIndex + 1); // Move to the next document
+                hideLoadingModal(); // Hide the loading modal after the new document is loaded
+                resetButtons(); // Reset button states
 
                 if (diffBtnActive) {
                     diffBtn.classList.add('active');
@@ -595,7 +603,24 @@
                 } else {
                     diffBtn.classList.remove('active');
                 }
-            }
+            }, 200); // Wait for 0.2 seconds before hiding the modal and moving to the next item
+        });
+
+        // Handle the "Go Back" button click event
+        document.getElementById('go-back').addEventListener('click', () => {
+            showLoadingModal();
+            setTimeout(() => {
+                loadDocument(currentIndex - 1); // Move to the previous document
+                hideLoadingModal(); // Hide the loading modal after the new document is loaded
+                resetButtons(); // Reset button states
+
+                if (diffBtnActive) {
+                    diffBtn.classList.add('active');
+                    highlightCommonSubstrings();
+                } else {
+                    diffBtn.classList.remove('active');
+                }
+            }, 200); // Wait for 0.2 seconds before hiding the modal and moving to the previous item
         });
         
         // Logging user choices and updating progress if it was the first choice
@@ -629,7 +654,8 @@
                         .get()
                         .then((querySnapshot) => {
                             const selectionsMade = querySnapshot.size;
-                            document.getElementById('survey-title').innerText = `Survey: PDF #${currentIndex + 1} (Progress: ${selectionsMade}/${totalItems})`;
+                            document.getElementById('survey-title').innerText = `PDF #${currentIndex + 1} (Progress: ${selectionsMade}/${totalItems})`;
+                            document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;  // Update the new div
 
                             // Update the visibility of the "Jump2new" button based on progress
                             toggleJump2newButton(selectionsMade, totalItems);
@@ -702,34 +728,6 @@
             } 
         });
 
-        // Forward user to un-picked preferences
-        function loadFirstUnansweredItem() {
-            if (currentUser) {
-                const userEmail = currentUser.email;
-
-                db.collection('user_preferences').where('userName', '==', userEmail).get()
-                .then((querySnapshot) => {
-                    let answeredItems = [];
-                    querySnapshot.forEach((doc) => {
-                        answeredItems.push(doc.data().pairIndex);
-                    });
-
-                    for (let i = 0; i < totalItems; i++) {
-                        if (!answeredItems.includes(i)) {
-                            currentIndex = i;  // Update the currentIndex to the first unanswered item
-                            loadDocument(currentIndex);  // Load the first unanswered document
-                            break;
-                        }
-                    }
-                }).catch((error) => {
-                    console.error("Error loading unanswered items:", error);
-                });
-            } else {
-                console.error("No user authenticated.");
-                window.location.href = 'login.html';  // Redirect to login if no user is logged in
-            }
-        }
-
         // Wait for the DOM content to be fully loaded
         document.addEventListener('DOMContentLoaded', (event) => {
             const modal = document.getElementById('endOfLineModal');
@@ -767,20 +765,6 @@
             }
         }
 
-        // End of Line Modal
-        const modal = document.getElementById('endOfLineModal');
-        const closeBtn = document.querySelector('.close-btn');
-
-        closeBtn.onclick = function() {
-            modal.style.display = "none";
-        };
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        };
-
     </script>
 
 <!-- End of Line Modal -->
@@ -789,6 +773,13 @@
         <span class="close-btn">&times;</span>
         <p>🎉 You have reached the end of the items ... for now 🥲<br>
            Please come back later.</p>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="modal">
+    <div class="modal-content">
+        <p style="font-size: 50px; text-align: center;">⌛</p> <!-- Display the hourglass emoji -->
     </div>
 </div>
 
