@@ -242,27 +242,45 @@
                 currentUser = user;  // Get the current authenticated user
                 console.log("User logged in: ", user.email);
 
-                // Calculate the group index based on user ID
-                let userUID = user.uid;
-                if (userUID && !isNaN(parseInt(userUID, 10))) {
-                    groupIndex = parseInt(userUID, 10) % 12;
-                } else {
-                    console.error("Invalid UID: Unable to calculate group index");
-                }
+                const userDocRef = db.collection('users').doc(user.uid);
 
-                console.log("User Group Index:", groupIndex);
+                // Retrieve or create groupIndex
+                userDocRef.get().then((doc) => {
+                    if (doc.exists && doc.data().hasOwnProperty('groupIndex')) {
+                        groupIndex = doc.data().groupIndex;
+                        console.log("Existing User Group Index:", groupIndex);
+                    } else {
+                        // Generate a random number between 0 and 11
+                        groupIndex = Math.floor(Math.random() * 12);
+                        console.log("New User Group Index:", groupIndex);
 
-                // fetch total items count from Firestore for the correct user group
-                db.collection(`user_group_${groupIndex}`).get().then((querySnapshot) => {
-                    totalItems = querySnapshot.size;  // Set totalItems to the number of documents
-                    loadFirstUnansweredItem();  // Only proceed after totalItems is assigned
+                        // Store the groupIndex in Firestore under the user's document
+                        userDocRef.set({ groupIndex: groupIndex }, { merge: true })
+                        .then(() => {
+                            console.log("Group Index stored successfully");
+                        })
+                        .catch((error) => {
+                            console.error("Error storing Group Index:", error);
+                        });
+                    }
+
+                    // fetch total items count from Firestore for the correct user group
+                    db.collection(`user_group_${groupIndex}`).get().then((querySnapshot) => {
+                        totalItems = querySnapshot.size;  // Set totalItems to the number of documents
+                        loadFirstUnansweredItem();  // Only proceed after totalItems is assigned
+                    }).catch((error) => {
+                        console.error("Error retrieving total items:", error);
+                    });
+
                 }).catch((error) => {
-                    console.error("Error retrieving total items:", error);
+                    console.error("Error retrieving user document:", error);
                 });
+
             } else {
                 window.location.href = 'login.html';  // Redirect to login if no user is logged in
             }
         });
+
 
 
         let currentIndex = 0;  // Default to document with id=0
