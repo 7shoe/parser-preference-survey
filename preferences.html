@@ -247,37 +247,35 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const auth = firebase.auth();         // init Firebase auth
+        const auth = firebase.auth();
 
         // Variables to track the user and group index
         let currentUser = null;
         let groupIndex = null;
+        let totalItems = 0;
+        let unannotatedItems = [];
+        let currentIndex = 0;
         let diffBtnActive = false;
-        let totalItems = 0;  // To track the number of items
-        let unannotatedItems = [];  // Preload list of unannotated items
 
-        const timeFadeInGreen = 500;  // Increase to 0.5 seconds
-        const timeStayGreen = 500;    // Increase to 0.5 seconds
-        const timeFadeOutGreen = 500; // Increase to 0.5 seconds
+        const timeFadeInGreen = 500;
+        const timeStayGreen = 500;
+        const timeFadeOutGreen = 500;
 
         auth.onAuthStateChanged(function(user) {
             if (user) {
-                currentUser = user;  // Get the current authenticated user
+                currentUser = user;
                 console.log("User logged in: ", user.email);
 
                 const userDocRef = db.collection('users').doc(user.uid);
 
-                // Retrieve or create groupIndex
                 userDocRef.get().then((doc) => {
                     if (doc.exists && doc.data().hasOwnProperty('groupIndex')) {
                         groupIndex = doc.data().groupIndex;
                         console.log("Existing User Group Index:", groupIndex);
                     } else {
-                        // Generate a random number between 0 and 11
                         groupIndex = Math.floor(Math.random() * 12);
                         console.log("New User Group Index:", groupIndex);
 
-                        // Store the groupIndex in Firestore under the user's document
                         userDocRef.set({ groupIndex: groupIndex }, { merge: true })
                         .then(() => {
                             console.log("Group Index stored successfully");
@@ -287,7 +285,6 @@
                         });
                     }
 
-                    // fetch total items and unannotated items count from Firestore for the correct user group
                     preloadUnannotatedItems();
                     
                 }).catch((error) => {
@@ -295,67 +292,54 @@
                 });
 
             } else {
-                window.location.href = 'login.html';  // Redirect to login if no user is logged in
+                window.location.href = 'login.html';
             }
         });
 
-        let currentIndex = 0;  // Default to document with id=0
         const text1Elem = document.getElementById('text1');
         const text2Elem = document.getElementById('text2');
         const goForwardBtn = document.getElementById('go-forward');
 
-        // Disable the "Go Forward" button initially
         goForwardBtn.disabled = true;
 
-        // Fetch data based on current index
         let originalText1 = '';
         let originalText2 = '';
 
-        // Handle the "Jump2new" button
         document.getElementById('jump2new-btn').addEventListener('click', function() {
-            loadFirstUnansweredItem();  // Jump to the first unannotated item
+            loadFirstUnansweredItem();
         });
 
-        // Show or hide the "Jump2new" button based on progress
         function toggleJump2newButton(selectionsMade, totalItems) {
             const jump2newBtn = document.getElementById('jump2new-btn');
-            
             if (selectionsMade < totalItems) {
-                jump2newBtn.style.display = 'block';  // Show the button
+                jump2newBtn.style.display = 'block';
             } else {
-                jump2newBtn.style.display = 'none';  // Hide the button
+                jump2newBtn.style.display = 'none';
             }
         }
 
-        // Preload all unannotated items
         function preloadUnannotatedItems() {
             if (currentUser) {
                 const userEmail = currentUser.email;
 
-                // Query all annotated items by the user
                 db.collection(`user_preferences_${groupIndex}`).where('userName', '==', userEmail).get()
                 .then((querySnapshot) => {
                     let annotatedIds = [];
                     querySnapshot.forEach((doc) => {
-                        annotatedIds.push(doc.data().pairIndex); // Also stores `id`
+                        annotatedIds.push(doc.data().id);
                     });
 
-                    // Query all items in user group and sort by 'id'
                     db.collection(`user_group_${groupIndex}`).orderBy('id', 'asc').get()
                     .then((querySnapshot) => {
                         totalItems = querySnapshot.size;
                         querySnapshot.forEach((doc) => {
                             const id = doc.data().id;
                             if (!annotatedIds.includes(id)) {
-                                unannotatedItems.push(id);  // Collect unannotated ids
+                                unannotatedItems.push(id);
                             }
                         });
 
-                        // No need to sort again since we ordered by 'id' in the query
-                        // Set the currentIndex to the first unannotated document's id
                         currentIndex = unannotatedItems[0];
-
-                        // Load the first unannotated item
                         loadDocument(currentIndex);
                     }).catch((error) => {
                         console.error("Error retrieving user group items:", error);
@@ -365,13 +349,12 @@
                 });
             } else {
                 console.error("No user authenticated.");
-                window.location.href = 'login.html';  // Redirect to login if no user is logged in
+                window.location.href = 'login.html';
             }
         }
 
-        // Load document by id from the preloaded unannotated items
         function loadDocument(index) {
-            currentIndex = index;  // Update the current index
+            currentIndex = index;
 
             console.log(`Attempting to load document with index: ${index} from user_group_${groupIndex}`);
 
@@ -392,32 +375,28 @@
                         text2Elem.innerText = originalText2;
 
                         const oldPdfImageElem = document.getElementById('pdf-image');
-
-                        // Replace the old image with a new one
                         const newPdfImageElem = oldPdfImageElem.cloneNode(true);
                         newPdfImageElem.src = data.url;
-                        newPdfImageElem.style.width = '13%';  // Start with the small size
+                        newPdfImageElem.style.width = '13%';
                         oldPdfImageElem.replaceWith(newPdfImageElem);
 
-                        // Add click event listener for toggling the size of the new image
                         newPdfImageElem.addEventListener('click', function () {
                             if (newPdfImageElem.style.width === '13%') {
-                                newPdfImageElem.style.width = '32%';  // Switch to original size
+                                newPdfImageElem.style.width = '32%';
                             } else {
-                                newPdfImageElem.style.width = '13%';  // Switch back to small size
+                                newPdfImageElem.style.width = '13%';
                             }
                         });
 
-                        // Update the headline with progress
                         db.collection(`user_preferences_${groupIndex}`)
                         .where('userName', '==', currentUser.email)
                         .get()
                         .then((querySnapshot) => {
-                            const selectionsMade = querySnapshot.size;  // Number of documents in 'user_preferences'
+                            const selectionsMade = querySnapshot.size;
                             document.getElementById('survey-title').innerText = `Idx: ${index} (Progress: ${selectionsMade}/${totalItems})`;
-                            document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;  // Update the new div
-                            highlightProgressText();  // Highlight the progress text
-                            toggleJump2newButton(selectionsMade, totalItems); // Show/hide the Jump2new button
+                            document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;
+                            highlightProgressText();
+                            toggleJump2newButton(selectionsMade, totalItems);
                         })
                         .catch((error) => {
                             console.error("Error retrieving user preferences count:", error);
@@ -425,25 +404,18 @@
                             document.getElementById('progress-summary').innerText = `0/${totalItems}`;
                         });
 
-                        // Check for the user's previous choice
                         highlightPreviousChoice(index);
-
-                        // Store the diffs for later use
                         text1Elem.setAttribute('data-diffs', JSON.stringify(data.diff));
-
-                        // Show or hide buttons based on currentIndex
                         toggleButtonVisibility();
 
-                        // Store additional attributes for use when logging the choice
                         const choiceAttributes = {
                             url: data.url,
-                            pids: data.pids,  // Assuming these attributes exist in your data
+                            pids: data.pids,
                             image_id: data.image_id,
                             choice_id: data.choice_id,
                             add_choice_id: data.add_choice_id
                         };
 
-                        // Attach the attributes to the DOM elements for later access
                         text1Elem.setAttribute('data-choice-attributes', JSON.stringify(choiceAttributes));
                     } else {
                         console.error("Error: Data fields are missing or incomplete in the retrieved document.");
@@ -454,9 +426,8 @@
             });
         }
 
-        // Function to check and highlight the user's previous choice
         function highlightPreviousChoice(pairIndex) {
-            resetButtons();  // Ensure buttons are reset before checking for previous choices
+            resetButtons();
 
             const docId = `user_${currentUser.uid}_pair_${pairIndex}`;
 
@@ -484,17 +455,14 @@
             const goBackBtn = document.getElementById('go-back');
             const goForwardBtn = document.getElementById('go-forward');
 
-            // Always show Go Forward on first load
             goForwardBtn.style.display = 'block';
 
-            // Hide Go Back if it's the first item
             if (currentIndex === unannotatedItems[0]) {
                 goBackBtn.style.display = 'none';
             } else {
                 goBackBtn.style.display = 'block';
             }
 
-            // Hide Go Forward if it's the last item
             if (currentIndex === unannotatedItems[unannotatedItems.length - 1]) {
                 goForwardBtn.style.display = 'none';
             } else {
@@ -502,19 +470,16 @@
             }
         }
 
-        // Function to show or hide the "Go Forward" and "Go Backward" buttons
         function toggleButtonVisibility() {
             const goForwardBtn = document.getElementById('go-forward');
             const goBackBtn = document.getElementById('go-back');
 
-            // Hide "Go Forward" if at the last item, otherwise show it
             if (currentIndex === unannotatedItems[unannotatedItems.length - 1]) {
                 goForwardBtn.style.visibility = 'hidden';
             } else {
                 goForwardBtn.style.visibility = 'visible';
             }
 
-            // Hide "Go Back" if at the first item, otherwise show it
             if (currentIndex === unannotatedItems[0]) {
                 goBackBtn.style.visibility = 'hidden';
             } else {
@@ -522,10 +487,6 @@
             }
         }
 
-        // Load the first document by default
-        //loadDocument(currentIndex);
-
-        // Diff button event listener
         const diffBtn = document.getElementById('diff-btn');
         diffBtn.addEventListener('click', function() {
             diffBtn.classList.toggle('active');
@@ -534,12 +495,11 @@
             if (diffBtnActive) {
                 highlightCommonSubstrings();
             } else {
-                text1Elem.innerText = originalText1;  // Reset directly
+                text1Elem.innerText = originalText1;
                 text2Elem.innerText = originalText2;
             }
         });
 
-        // Highlight common substrings based on the stored diffs
         function highlightCommonSubstrings() {
             const diffs = JSON.parse(text1Elem.getAttribute('data-diffs'));
 
@@ -561,54 +521,46 @@
             text2Elem.innerHTML = highlightedText2;
         }
 
-        // Function to reset button states to avoid incorrect highlighting
         function resetButtons() {
             const allButtons = document.querySelectorAll('.green-btn, .white-btn');
-            allButtons.forEach(btn => btn.classList.remove('active'));  // Remove active class from all buttons
-            goForwardBtn.disabled = true;  // Disable "Go Forward" again until new choice is made
+            allButtons.forEach(btn => btn.classList.remove('active'));
+            goForwardBtn.disabled = true;
         }
 
-        // Function to highlight the progress text
         function highlightProgressText() {
             const topProgressText = document.getElementById('survey-title');
             const bottomProgressText = document.getElementById('progress-summary');
 
-            // Add the green highlight class
             topProgressText.classList.add('green-highlight');
             bottomProgressText.classList.add('green-highlight');
 
-            // Remove the highlight after the specified time
             setTimeout(() => {
                 topProgressText.classList.remove('green-highlight');
                 bottomProgressText.classList.remove('green-highlight');
             }, timeFadeInGreen + timeStayGreen + timeFadeOutGreen);
         }
 
-        // Function to show an error message if "Go Forward" is clicked when disabled
         function showError() {
             alert(`I'm sorry, ${currentUser.email}. I'm afraid I can't do that. Make your choice by clicking the key at the bottom before proceeding.`);
         }
 
-        // Function to show the loading modal
         function showLoadingModal() {
             const loadingModal = document.getElementById('loadingModal');
             loadingModal.style.display = "block";
         }
 
-        // Function to hide the loading modal
         function hideLoadingModal() {
             const loadingModal = document.getElementById('loadingModal');
             loadingModal.style.display = "none";
         }
 
-        // Handle the "Go Forward" button click event
         document.getElementById('go-forward').addEventListener('click', () => {
             showLoadingModal();
             setTimeout(() => {
                 const nextIndex = unannotatedItems[unannotatedItems.indexOf(currentIndex) + 1];
-                loadDocument(nextIndex); // Move to the next unannotated document
-                hideLoadingModal(); // Hide the loading modal after the new document is loaded
-                resetButtons(); // Reset button states
+                loadDocument(nextIndex);
+                hideLoadingModal();
+                resetButtons();
 
                 if (diffBtnActive) {
                     diffBtn.classList.add('active');
@@ -616,17 +568,16 @@
                 } else {
                     diffBtn.classList.remove('active');
                 }
-            }, 200); // Wait for 0.2 seconds before hiding the modal and moving to the next item
+            }, 200);
         });
 
-        // Handle the "Go Back" button click event
         document.getElementById('go-back').addEventListener('click', () => {
             showLoadingModal();
             setTimeout(() => {
                 const prevIndex = unannotatedItems[unannotatedItems.indexOf(currentIndex) - 1];
-                loadDocument(prevIndex); // Move to the previous unannotated document
-                hideLoadingModal(); // Hide the loading modal after the new document is loaded
-                resetButtons(); // Reset button states
+                loadDocument(prevIndex);
+                hideLoadingModal();
+                resetButtons();
 
                 if (diffBtnActive) {
                     diffBtn.classList.add('active');
@@ -634,52 +585,39 @@
                 } else {
                     diffBtn.classList.remove('active');
                 }
-            }, 200); // Wait for 0.2 seconds before hiding the modal and moving to the previous item
+            }, 200);
         });
         
-        // Logging user choices and updating progress if it was the first choice
         function logUserChoice(choice) {
             const docId = `user_${currentUser.uid}_pair_${currentIndex}`;
-            
-            // Retrieve the stored attributes from the DOM element
             const choiceAttributes = JSON.parse(text1Elem.getAttribute('data-choice-attributes'));
 
-            // Check if the current item already has a logged choice in the group-specific collection
             db.collection(`user_preferences_${groupIndex}`).doc(docId).get().then((doc) => {
                 if (!doc.exists) {
-                    // If the document does not exist, log the choice and additional attributes
                     db.collection(`user_preferences_${groupIndex}`).doc(docId).set({
                         userName: currentUser.email,
                         userId: currentUser.uid,
                         choice: choice,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        pairIndex: currentIndex,
-                        url: choiceAttributes.url,
-                        pids: choiceAttributes.pids,
-                        image_id: choiceAttributes.image_id,
-                        choice_id: choiceAttributes.choice_id,
-                        add_choice_id: choiceAttributes.add_choice_id,
-                        id: currentIndex
+                        id: currentIndex,
+                        ...choiceAttributes
                     }).then(() => {
                         console.log("User preference logged with additional attributes:", choice);
 
-                        // Increment the selection count and update the headline
                         db.collection(`user_preferences_${groupIndex}`)
                         .where('userId', '==', currentUser.uid)
                         .get()
                         .then((querySnapshot) => {
                             const selectionsMade = querySnapshot.size;
                             document.getElementById('survey-title').innerText = `Idx: ${currentIndex} (Progress: ${selectionsMade}/${totalItems})`;
-                            document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;  // Update the new div
+                            document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;
 
-                            // Update the visibility of the "Jump2new" button based on progress
                             toggleJump2newButton(selectionsMade, totalItems);
                         })
                         .catch((error) => {
                             console.error("Error updating progress:", error);
                         });
 
-                        // Remove the currentIndex from the unannotatedItems list
                         const currentIndexPos = unannotatedItems.indexOf(currentIndex);
                         if (currentIndexPos > -1) {
                             unannotatedItems.splice(currentIndexPos, 1);
@@ -695,33 +633,29 @@
             });
         }
 
-        // Enable "Go Forward" button when a choice is made
         function enableGoForward() {
             goForwardBtn.disabled = false;
         }
 
-        // Left
         document.getElementById('prefer-left').addEventListener('click', function() {
             toggleSelection(this);
             logUserChoice('left');
             enableGoForward();
-            updateButtonVisibility();  // Update visibility after selection
+            updateButtonVisibility();
         });
 
-        // Right
         document.getElementById('prefer-right').addEventListener('click', function() {
             toggleSelection(this);
             logUserChoice('right');
             enableGoForward();
-            updateButtonVisibility();  // Update visibility after selection
+            updateButtonVisibility();
         });
 
-        // No preference
         document.getElementById('neither').addEventListener('click', function() {
             toggleSelection(this);
             logUserChoice('neither');
             enableGoForward();
-            updateButtonVisibility();  // Update visibility after selection
+            updateButtonVisibility();
         });
 
         function toggleSelection(button) {
@@ -730,7 +664,6 @@
             button.classList.toggle('active');
         }
 
-        // Keystroke listener -> quicker navigation
         document.addEventListener('keydown', function(event) {
             if (event.key === 'ArrowLeft') {
                 document.getElementById('prefer-left').click();
@@ -743,23 +676,20 @@
                 setTimeout(() => document.getElementById('go-forward').click(), 200);
             } else if (event.key === 'ArrowUp') {
                 document.getElementById('pdf-image').click();
-            } else if (event.key === ' ') {  // Handle spacebar for diff button
-                event.preventDefault();  // Prevent the default behavior (scrolling)
-                document.getElementById('diff-btn').click();  // Trigger the diff button click
+            } else if (event.key === ' ') {
+                event.preventDefault();
+                document.getElementById('diff-btn').click();
             } 
         });
 
-        // Wait for the DOM content to be fully loaded
         document.addEventListener('DOMContentLoaded', (event) => {
             const modal = document.getElementById('endOfLineModal');
             const closeBtn = document.querySelector('.close-btn');
 
-            // Make sure "Go Forward" button is shown on load
             const goForwardBtn = document.getElementById('go-forward');
-            goForwardBtn.style.display = 'block';  // Ensure Go Forward is visible initially
+            goForwardBtn.style.display = 'block';
 
-            // Also update the visibility of the Go Back button if necessary
-            updateButtonVisibility(); // Call the function that handles visibility logic
+            updateButtonVisibility();
 
             if (modal && closeBtn) {
                 closeBtn.onclick = function() {
@@ -776,7 +706,6 @@
             }
         });
 
-        // Show the "End of Line" modal when no more items are available
         function showEndOfLineModal() {
             const modal = document.getElementById('endOfLineModal');
             if (modal) {
