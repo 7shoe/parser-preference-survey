@@ -339,12 +339,20 @@
             }
         }
 
-        // Existing loadDocument function
-        // Existing loadDocument function modified to use dynamic collection
+        // 8:40pm Existing loadDocument function
         function loadDocument(index) {
+            console.log(`Attempting to load document with index: ${index} from user_group_${groupIndex}`);
+
             db.collection(`user_group_${groupIndex}`).where('id', '==', index).get().then((querySnapshot) => {
+                if (querySnapshot.empty) {
+                    console.error("No document found with the specified index.");
+                    return;
+                }
+
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
+                    console.log("Document data retrieved:", data);
+
                     if (data.texts && data.texts[0] && data.texts[1] && data.url && data.diff) {
                         originalText1 = data.texts[0];
                         originalText2 = data.texts[1];
@@ -393,7 +401,7 @@
                         // Show or hide buttons based on currentIndex
                         toggleButtonVisibility();
                     } else {
-                        console.error("Error: Data fields are missing.");
+                        console.error("Error: Data fields are missing or incomplete in the retrieved document.");
                     }
                 });
             }).catch((error) => {
