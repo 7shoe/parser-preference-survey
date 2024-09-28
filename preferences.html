@@ -552,20 +552,31 @@
                 return;
             }
 
-            if (currentIndex < totalItems - 1) {
-                currentIndex++;
-                loadDocument(currentIndex);
-                resetButtons();
+            // Check the number of annotations made by the user
+            db.collection(`user_preferences_${groupIndex}`)
+            .where('userName', '==', currentUser.email)
+            .get()
+            .then((querySnapshot) => {
+                const selectionsMade = querySnapshot.size; // Number of annotated items
 
-                if (diffBtnActive) {
-                    diffBtn.classList.add('active');
-                    highlightCommonSubstrings();
+                if (selectionsMade < totalItems) {
+                    currentIndex++;
+                    loadDocument(currentIndex);
+                    resetButtons();
+
+                    if (diffBtnActive) {
+                        diffBtn.classList.add('active');
+                        highlightCommonSubstrings();
+                    } else {
+                        diffBtn.classList.remove('active');
+                    }
                 } else {
-                    diffBtn.classList.remove('active');
+                    showEndOfLineModal();  // Show the modal when reaching the last item
                 }
-            } else {
-                showEndOfLineModal();  // Show the modal when reaching the last item
-            }
+            })
+            .catch((error) => {
+                console.error("Error checking user annotations:", error);
+            });
         });
 
 
