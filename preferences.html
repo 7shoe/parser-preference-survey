@@ -419,7 +419,7 @@
                         })
                         .catch((error) => {
                             console.error("Error retrieving user preferences count:", error);
-                            document.getElementById('survey-title').innerText = `PDF #${index + 1}`;
+                            document.getElementById('survey-title').innerText = `Idx: ${index + 1}`;
                             document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;
                         });
 
@@ -657,7 +657,7 @@
                         image_id: choiceAttributes.image_id,
                         choice_id: choiceAttributes.choice_id,
                         add_choice_id: choiceAttributes.add_choice_id,
-                        id: currentIndex // Store the `id` as well
+                        id: currentIndex
                     }).then(() => {
                         console.log("User preference logged with additional attributes:", choice);
 
@@ -667,7 +667,7 @@
                         .get()
                         .then((querySnapshot) => {
                             const selectionsMade = querySnapshot.size;
-                            document.getElementById('survey-title').innerText = `PDF #${currentIndex + 1} (Progress: ${selectionsMade}/${totalItems})`;
+                            document.getElementById('survey-title').innerText = `Idx: ${currentIndex + 1} (Progress: ${selectionsMade}/${totalItems})`;
                             document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;  // Update the new div
 
                             // Update the visibility of the "Jump2new" button based on progress
