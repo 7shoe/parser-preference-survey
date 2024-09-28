@@ -451,23 +451,25 @@
             });
         }
 
-        function updateButtonVisibility() {
-            const goBackBtn = document.getElementById('go-back');
-            const goForwardBtn = document.getElementById('go-forward');
+        function loadDocument(index) {
+            currentIndex = index;
 
-            goForwardBtn.style.display = 'block';
+            console.log(`Attempting to load document with index: ${index} from user_group_${groupIndex}`);
 
-            if (currentIndex === unannotatedItems[0]) {
-                goBackBtn.style.display = 'none';
-            } else {
-                goBackBtn.style.display = 'block';
-            }
+            db.collection(`user_group_${groupIndex}`).where('id', '==', index).get().then((querySnapshot) => {
+                if (querySnapshot.empty) {
+                    console.error("No document found with the specified index.");
+                    return;
+                }
 
-            if (currentIndex === unannotatedItems[unannotatedItems.length - 1]) {
-                goForwardBtn.style.display = 'none';
-            } else {
-                goForwardBtn.style.display = 'block';
-            }
+                querySnapshot.forEach((doc) => {
+                    // [Load document logic here]
+
+                    updateButtonVisibility(); // Ensure buttons are updated after loading the document
+                });
+            }).catch((error) => {
+                console.error("Error retrieving data from Firestore:", error);
+            });
         }
 
         function toggleButtonVisibility() {
