@@ -16,8 +16,10 @@
         }
         #pdf-image {
             width: 32%;
-            margin-bottom: 20px;
-            border: none; /* Ensure no border is present */
+            margin-bottom: 0;  /* Set to 0 if extra space */
+            padding-bottom: 0; /* Set to 0 if extra space */
+            display: block;    /* Ensure it's a block-level element */
+            background-color: transparent; /* Just in case there's any background-color inherited */
         }
         .text-box-container {
             display: flex;
