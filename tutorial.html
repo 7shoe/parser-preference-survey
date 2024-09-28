@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorial for Parser-Output-Survey</title>
+    <style>
+        body {
+            background-color: #181818; /* Dark background color */
+            color: #f1f1f1;            /* Light text color */
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #f1f1f1;             /* Light text color */
+            text-align: center;
+        }
+        p, ul {
+            font-size: 18px;
+            color: #f1f1f1;
+            max-width: 800px;
+            text-align: justify;
+        }
+        img {
+            display: block;
+            margin: 20px auto;
+            max-width: 50%; /* Image takes 50% of the page width */
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0px 0px 30px 10px rgba(0, 0, 0, 0.7); /* Shadow effect */
+        }
+        .caption {
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #FFD700;  /* Gold text color for captions */
+        }
+        ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        /* Go Back Button */
+        .go-back-btn {
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            padding: 10px 20px;
+            margin-top: 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .go-back-btn:hover {
+            background-color: #ddd;  /* Slightly darker on hover */
+        }
+    </style>
+</head>
+<body>
+    <h1>Tutorial: Surveying Preferences of Parser Output</h1>
+
+    <section>
+        <h2>Setting</h2>
+        <p>Sample text...</p>
+        <img src="https://lh3.googleusercontent.com/d/1y4vgs6uLcOe_POpoHq4uCGF12OlRjqPe" alt="Setting Image">
+    </section>
+
+    <section>
+        <h2>Features to consider (in arbitrary order)</h2>
+        <ul>
+            <li>Text dropped, cut, or misaligned</li>
+            <li>Mis-parsed domain-specific words (e.g. <code>compiler</code> → <code>composer</code>)</li>
+            <li>Scrambled LaTeX equations (e.g. <code>S f(xdx$</code>)</li>
+            <li>Irregular formatting (e.g. arbitrary newlines)</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Modes</h2>
+        <p>Judge two kinds of pages. Either paragraph-wise or a full page.</p>
+        <img src="https://lh3.googleusercontent.com/d/1yPlzWoyUsVItDFj1McOzUsaFJjpJTDxU" alt="Modes Image">
+    </section>
+
+    <section>
+        <h2>Navigation</h2>
+        <p>Either use the mouse (for navigation, e.g., <strong>Go Forward</strong> and <strong>Go Back</strong>) or to make a choice <strong>I prefer this</strong> or <strong>Neither</strong>.</p>
+        <img src="https://lh3.googleusercontent.com/d/11U5zbH4eoiGj9RphbhedqcOZ2XvO746Q" alt="Arrow keys">
+        <div class="caption">Arrow keys</div>
+        <img src="https://lh3.googleusercontent.com/d/1C-Lv9thYhjVrWZobE_nczwZa2COHHTr7" alt="Similarity highlighting">
+        <div class="caption">Similarity highlighting: XXX</div>
+    </section>
+
+    <section>
+        <h2>Advice</h2>
+        <ul>
+            <li>Be principled but follow your gut (preferences are not fixed rules)</li>
+            <li>Don't read but skim (instead check subsection titles, paragraph beginnings, exotic words)</li>
+            <li>Consider in advance how important meta data (e.g., names of authors, DOI, dates, etc.), equations, subsection titles, etc. are for a scientific document page in your opinion</li>
+        </ul>
+    </section>
+
+    <!-- Go Back Button -->
+    <button class="go-back-btn" onclick="window.location.href='login.html'">Go Back</button>
+
+</body>
+</html>

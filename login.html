@@ -71,11 +71,14 @@
     <div class="login-container">
         <h1>Surveying Preferences of Parser Output</h1>
 
-        <!-- Display the image from Firestore -->
-        <img src="" id="firestore-image" alt="Logo Image">
+        <!-- Display the image directly from the URL -->
+        <img src="https://lh3.googleusercontent.com/d/1VPZ3laBMtSTBAD8ztShZK2jiCvXIkT7U" id="firestore-image" alt="Logo Image">
 
-        <!-- Firestore text will be displayed here -->
-        <p>Don't have an account? <a href="register.html">Register here</a></p>
+        <!-- Links for registration and tutorial -->
+        <p>
+            Don't have an account? <a href="register.html">Register here</a> | 
+            <a href="tutorial.html">Tutorial</a>
+        </p>
 
         <!-- Username and Password fields -->
         <form id="loginForm">
@@ -106,27 +109,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
-
-        // Fetch the logo image from Firestore and display it
-        function fetchFirestoreImage() {
-            db.collection('login_page').doc('item0').get()
-            .then((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    document.getElementById('firestore-image').src = data.logo;
-                } else {
-                    console.log("No such document!");
-                    document.getElementById('firestore-text').innerText = "No image found!";
-                }
-            })
-            .catch((error) => {
-                console.error("Error getting document:", error);
-                document.getElementById('firestore-text').innerText = "Error loading image!";
-            });
-        }
-
-        // Call the function to fetch Firestore image when the page loads
-        window.onload = fetchFirestoreImage;
 
         // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', function(event) {
