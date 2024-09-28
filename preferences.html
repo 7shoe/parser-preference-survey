@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preferences</title>
     <style>
@@ -255,6 +255,7 @@
         let diffBtnActive = false;
         let totalItems = 0;  // To track the number of items
         let unannotatedItems = [];  // Preload list of unannotated items
+        let largestAnnotatedIndex = -1; // Track the largest annotated index
 
         const timeFadeInGreen = 500;  // Increase to 0.5 seconds
         const timeStayGreen = 500;    // Increase to 0.5 seconds
@@ -332,35 +333,46 @@
             if (currentUser) {
                 const userEmail = currentUser.email;
 
-                // Query all annotated items by the user
-                db.collection(`user_preferences_${groupIndex}`).where('userName', '==', userEmail).get()
-                .then((querySnapshot) => {
-                    let annotatedIds = [];
-                    querySnapshot.forEach((doc) => {
-                        annotatedIds.push(doc.data().pairIndex); // Also stores `id`
-                    });
-
-                    // Query all items in user group
-                    db.collection(`user_group_${groupIndex}`).get()
+                // Query all annotated items by the user and find the largestAnnotatedIndex
+                db.collection(`user_preferences_${groupIndex}`)
+                    .where('userName', '==', userEmail) // Filter by userName
+                    .get()
                     .then((querySnapshot) => {
-                        totalItems = querySnapshot.size;
+                        let annotatedIds = [];
                         querySnapshot.forEach((doc) => {
                             const id = doc.data().id;
-                            if (!annotatedIds.includes(id)) {
-                                unannotatedItems.push(id);  // Collect unannotated ids
+                            annotatedIds.push(id);
+                            if (id > largestAnnotatedIndex) {
+                                largestAnnotatedIndex = id;
                             }
                         });
 
-                        // Sort unannotated items by id (ascending)
-                        unannotatedItems.sort((a, b) => a - b);
+                        // Query all items in user group
+                        db.collection(`user_group_${groupIndex}`).get()
+                        .then((querySnapshot) => {
+                            totalItems = querySnapshot.size;
+                            querySnapshot.forEach((doc) => {
+                                const id = doc.data().id;
+                                if (!annotatedIds.includes(id)) {
+                                    unannotatedItems.push(id);  // Collect unannotated ids
+                                }
+                            });
 
-                        loadDocument(unannotatedItems[0]);  // Load the first unannotated item
-                    }).catch((error) => {
-                        console.error("Error retrieving user group items:", error);
+                            // Sort unannotated items by id (ascending)
+                            unannotatedItems.sort((a, b) => a - b);
+
+                            // Set the currentIndex to the first unannotated document
+                            currentIndex = largestAnnotatedIndex + 1;
+
+                            // Load the first unannotated item
+                            loadDocument(currentIndex);
+                        }).catch((error) => {
+                            console.error("Error retrieving user group items:", error);
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Error loading annotated items:", error);
                     });
-                }).catch((error) => {
-                    console.error("Error loading annotated items:", error);
-                });
             } else {
                 console.error("No user authenticated.");
                 window.location.href = 'login.html';  // Redirect to login if no user is logged in
