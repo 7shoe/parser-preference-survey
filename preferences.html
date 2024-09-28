@@ -199,7 +199,7 @@
             transition: color 0.5s ease-in, color 0.5s ease-out; /* Longer transition for debugging */
         }
     </style>
-</head>
+
 <body>
     <button id="jump2new-btn" style="position: fixed; top: 10px; right: 10px; padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; display: none;">Jump2new</button>
 
@@ -337,7 +337,7 @@
                 .then((querySnapshot) => {
                     let annotatedIds = [];
                     querySnapshot.forEach((doc) => {
-                        annotatedIds.push(doc.data().pairIndex);
+                        annotatedIds.push(doc.data().pairIndex); // Also stores `id`
                     });
 
                     // Query all items in user group
@@ -656,7 +656,8 @@
                         pids: choiceAttributes.pids,
                         image_id: choiceAttributes.image_id,
                         choice_id: choiceAttributes.choice_id,
-                        add_choice_id: choiceAttributes.add_choice_id
+                        add_choice_id: choiceAttributes.add_choice_id,
+                        id: currentIndex // Store the `id` as well
                     }).then(() => {
                         console.log("User preference logged with additional attributes:", choice);
 
