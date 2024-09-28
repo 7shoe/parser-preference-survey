@@ -255,7 +255,6 @@
         let diffBtnActive = false;
         let totalItems = 0;  // To track the number of items
         let unannotatedItems = [];  // Preload list of unannotated items
-        let largestAnnotatedIndex = -1; // Track the largest annotated index
 
         const timeFadeInGreen = 500;  // Increase to 0.5 seconds
         const timeStayGreen = 500;    // Increase to 0.5 seconds
@@ -333,46 +332,37 @@
             if (currentUser) {
                 const userEmail = currentUser.email;
 
-                // Query all annotated items by the user and find the largestAnnotatedIndex
-                db.collection(`user_preferences_${groupIndex}`)
-                    .where('userName', '==', userEmail) // Filter by userName
-                    .get()
+                // Query all annotated items by the user
+                db.collection(`user_preferences_${groupIndex}`).where('userName', '==', userEmail).get()
+                .then((querySnapshot) => {
+                    let annotatedIds = [];
+                    querySnapshot.forEach((doc) => {
+                        annotatedIds.push(doc.data().pairIndex); // Also stores `id`
+                    });
+
+                    // Query all items in user group and sort by 'id'
+                    db.collection(`user_group_${groupIndex}`).orderBy('id', 'asc').get()
                     .then((querySnapshot) => {
-                        let annotatedIds = [];
+                        totalItems = querySnapshot.size;
                         querySnapshot.forEach((doc) => {
                             const id = doc.data().id;
-                            annotatedIds.push(id);
-                            if (id > largestAnnotatedIndex) {
-                                largestAnnotatedIndex = id;
+                            if (!annotatedIds.includes(id)) {
+                                unannotatedItems.push(id);  // Collect unannotated ids
                             }
                         });
 
-                        // Query all items in user group
-                        db.collection(`user_group_${groupIndex}`).get()
-                        .then((querySnapshot) => {
-                            totalItems = querySnapshot.size;
-                            querySnapshot.forEach((doc) => {
-                                const id = doc.data().id;
-                                if (!annotatedIds.includes(id)) {
-                                    unannotatedItems.push(id);  // Collect unannotated ids
-                                }
-                            });
+                        // No need to sort again since we ordered by 'id' in the query
+                        // Set the currentIndex to the first unannotated document's id
+                        currentIndex = unannotatedItems[0];
 
-                            // Sort unannotated items by id (ascending)
-                            unannotatedItems.sort((a, b) => a - b);
-
-                            // Set the currentIndex to the first unannotated document
-                            currentIndex = largestAnnotatedIndex + 1;
-
-                            // Load the first unannotated item
-                            loadDocument(currentIndex);
-                        }).catch((error) => {
-                            console.error("Error retrieving user group items:", error);
-                        });
-                    })
-                    .catch((error) => {
-                        console.error("Error loading annotated items:", error);
+                        // Load the first unannotated item
+                        loadDocument(currentIndex);
+                    }).catch((error) => {
+                        console.error("Error retrieving user group items:", error);
                     });
+                }).catch((error) => {
+                    console.error("Error loading annotated items:", error);
+                });
             } else {
                 console.error("No user authenticated.");
                 window.location.href = 'login.html';  // Redirect to login if no user is logged in
@@ -424,15 +414,15 @@
                         .get()
                         .then((querySnapshot) => {
                             const selectionsMade = querySnapshot.size;  // Number of documents in 'user_preferences'
-                            document.getElementById('survey-title').innerText = `Idx: ${index + 1} (Progress: ${selectionsMade}/${totalItems})`;
+                            document.getElementById('survey-title').innerText = `Idx: ${index} (Progress: ${selectionsMade}/${totalItems})`;
                             document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;  // Update the new div
                             highlightProgressText();  // Highlight the progress text
                             toggleJump2newButton(selectionsMade, totalItems); // Show/hide the Jump2new button
                         })
                         .catch((error) => {
                             console.error("Error retrieving user preferences count:", error);
-                            document.getElementById('survey-title').innerText = `Idx: ${index + 1}`;
-                            document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;
+                            document.getElementById('survey-title').innerText = `Idx: ${index}`;
+                            document.getElementById('progress-summary').innerText = `0/${totalItems}`;
                         });
 
                         // Check for the user's previous choice
@@ -679,7 +669,7 @@
                         .get()
                         .then((querySnapshot) => {
                             const selectionsMade = querySnapshot.size;
-                            document.getElementById('survey-title').innerText = `Idx: ${currentIndex + 1} (Progress: ${selectionsMade}/${totalItems})`;
+                            document.getElementById('survey-title').innerText = `Idx: ${currentIndex} (Progress: ${selectionsMade}/${totalItems})`;
                             document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;  // Update the new div
 
                             // Update the visibility of the "Jump2new" button based on progress
