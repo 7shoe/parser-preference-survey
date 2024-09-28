@@ -412,7 +412,7 @@
                         .get()
                         .then((querySnapshot) => {
                             const selectionsMade = querySnapshot.size;  // Number of documents in 'user_preferences'
-                            document.getElementById('survey-title').innerText = `PDF #${index + 1} (Progress: ${selectionsMade}/${totalItems})`;
+                            document.getElementById('survey-title').innerText = `Idx: ${index + 1} (Progress: ${selectionsMade}/${totalItems})`;
                             document.getElementById('progress-summary').innerText = `${selectionsMade}/${totalItems}`;  // Update the new div
                             highlightProgressText();  // Highlight the progress text
                             toggleJump2newButton(selectionsMade, totalItems); // Show/hide the Jump2new button
