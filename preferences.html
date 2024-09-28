@@ -339,7 +339,7 @@
             }
         }
 
-        // 8:40pm Existing loadDocument function
+        // 10:56pm Existing loadDocument function
         function loadDocument(index) {
             console.log(`Attempting to load document with index: ${index} from user_group_${groupIndex}`);
 
@@ -400,6 +400,18 @@
 
                         // Show or hide buttons based on currentIndex
                         toggleButtonVisibility();
+
+                        // Store additional attributes for use when logging the choice
+                        const choiceAttributes = {
+                            url: data.url,
+                            pids: data.pids,  // Assuming these attributes exist in your data
+                            image_id: data.image_id,
+                            choice_id: data.choice_id,
+                            add_choice_id: data.add_choice_id
+                        };
+
+                        // Attach the attributes to the DOM elements for later access
+                        text1Elem.setAttribute('data-choice-attributes', JSON.stringify(choiceAttributes));
                     } else {
                         console.error("Error: Data fields are missing or incomplete in the retrieved document.");
                     }
@@ -571,27 +583,36 @@
         function logUserChoice(choice) {
             const docId = `user_${currentUser.uid}_pair_${currentIndex}`;
             
-            // Check if the current item already has a logged choice
-            db.collection('user_preferences').doc(docId).get().then((doc) => {
+            // Retrieve the stored attributes from the DOM element
+            const choiceAttributes = JSON.parse(text1Elem.getAttribute('data-choice-attributes'));
+
+            // Check if the current item already has a logged choice in the group-specific collection
+            db.collection(`user_preferences_${groupIndex}`).doc(docId).get().then((doc) => {
                 if (!doc.exists) {
-                    // If the document does not exist, log the choice and update the progress
-                    db.collection('user_preferences').doc(docId).set({
+                    // If the document does not exist, log the choice and additional attributes
+                    db.collection(`user_preferences_${groupIndex}`).doc(docId).set({
                         userName: currentUser.email,
+                        userId: currentUser.uid,
                         choice: choice,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        pairIndex: currentIndex
+                        pairIndex: currentIndex,
+                        url: choiceAttributes.url,
+                        pids: choiceAttributes.pids,
+                        image_id: choiceAttributes.image_id,
+                        choice_id: choiceAttributes.choice_id,
+                        add_choice_id: choiceAttributes.add_choice_id
                     }).then(() => {
-                        console.log("User preference logged:", choice);
+                        console.log("User preference logged with additional attributes:", choice);
 
                         // Increment the selection count and update the headline
-                        db.collection('user_preferences')
-                        .where('userName', '==', currentUser.email)
+                        db.collection(`user_preferences_${groupIndex}`)
+                        .where('userId', '==', currentUser.uid)
                         .get()
                         .then((querySnapshot) => {
                             const selectionsMade = querySnapshot.size;
                             document.getElementById('survey-title').innerText = `Survey: PDF #${currentIndex + 1} (Progress: ${selectionsMade}/${totalItems})`;
 
-                            // Optionally update the visibility of the "Jump2new" button
+                            // Update the visibility of the "Jump2new" button based on progress
                             toggleJump2newButton(selectionsMade, totalItems);
                         })
                         .catch((error) => {
@@ -725,11 +746,6 @@
             } else {
                 console.error("Modal not found.");
             }
-        }
-
-        // Show the "End of Line" modal when no more items are available
-        function showEndOfLineModal() {
-            modal.style.display = "block";
         }
 
         // End of Line Modal
