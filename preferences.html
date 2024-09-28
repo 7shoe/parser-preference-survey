@@ -196,7 +196,7 @@
         /* Green highlight effect */
         .green-highlight {
             color: #00FF00; /* Bright green */
-            transition: color var(--timeFadeInGreen) ease-in, color var(--timeFadeOutGreen) ease-out;
+            transition: color 0.5s ease-in, color 0.5s ease-out; /* Longer transition for debugging */
         }
     </style>
 </head>
@@ -254,10 +254,11 @@
         let groupIndex = null;
         let diffBtnActive = false;
         let totalItems = 0;  // To track the number of items
+        let unannotatedItems = [];  // Preload list of unannotated items
 
-        const timeFadeInGreen = 100;  // milliseconds
-        const timeStayGreen = 100;    // milliseconds
-        const timeFadeOutGreen = 100; // milliseconds
+        const timeFadeInGreen = 500;  // Increase to 0.5 seconds
+        const timeStayGreen = 500;    // Increase to 0.5 seconds
+        const timeFadeOutGreen = 500; // Increase to 0.5 seconds
 
         auth.onAuthStateChanged(function(user) {
             if (user) {
@@ -286,14 +287,9 @@
                         });
                     }
 
-                    // fetch total items count from Firestore for the correct user group
-                    db.collection(`user_group_${groupIndex}`).get().then((querySnapshot) => {
-                        totalItems = querySnapshot.size;  // Set totalItems to the number of documents
-                        loadFirstUnansweredItem();  // Only proceed after totalItems is assigned
-                    }).catch((error) => {
-                        console.error("Error retrieving total items:", error);
-                    });
-
+                    // fetch total items and unannotated items count from Firestore for the correct user group
+                    preloadUnannotatedItems();
+                    
                 }).catch((error) => {
                     console.error("Error retrieving user document:", error);
                 });
@@ -331,27 +327,39 @@
             }
         }
 
-        // Function to load the first unannotated item
-        function loadFirstUnansweredItem() {
+        // Preload all unannotated items
+        function preloadUnannotatedItems() {
             if (currentUser) {
                 const userEmail = currentUser.email;
 
-                db.collection('user_preferences').where('userName', '==', userEmail).get()
+                // Query all annotated items by the user
+                db.collection(`user_preferences_${groupIndex}`).where('userName', '==', userEmail).get()
                 .then((querySnapshot) => {
-                    let answeredItems = [];
+                    let annotatedIds = [];
                     querySnapshot.forEach((doc) => {
-                        answeredItems.push(doc.data().pairIndex);
+                        annotatedIds.push(doc.data().pairIndex);
                     });
 
-                    for (let i = 0; i < totalItems; i++) {
-                        if (!answeredItems.includes(i)) {
-                            currentIndex = i;  // Update the currentIndex to the first unanswered item
-                            loadDocument(currentIndex);  // Load the first unanswered document
-                            break;
-                        }
-                    }
+                    // Query all items in user group
+                    db.collection(`user_group_${groupIndex}`).get()
+                    .then((querySnapshot) => {
+                        totalItems = querySnapshot.size;
+                        querySnapshot.forEach((doc) => {
+                            const id = doc.data().id;
+                            if (!annotatedIds.includes(id)) {
+                                unannotatedItems.push(id);  // Collect unannotated ids
+                            }
+                        });
+
+                        // Sort unannotated items by id (ascending)
+                        unannotatedItems.sort((a, b) => a - b);
+
+                        loadDocument(unannotatedItems[0]);  // Load the first unannotated item
+                    }).catch((error) => {
+                        console.error("Error retrieving user group items:", error);
+                    });
                 }).catch((error) => {
-                    console.error("Error loading unanswered items:", error);
+                    console.error("Error loading annotated items:", error);
                 });
             } else {
                 console.error("No user authenticated.");
@@ -359,8 +367,10 @@
             }
         }
 
-        // 10:56pm Existing loadDocument function
+        // Load document by id from the preloaded unannotated items
         function loadDocument(index) {
+            currentIndex = index;  // Update the current index
+
             console.log(`Attempting to load document with index: ${index} from user_group_${groupIndex}`);
 
             db.collection(`user_group_${groupIndex}`).where('id', '==', index).get().then((querySnapshot) => {
@@ -476,14 +486,14 @@
             goForwardBtn.style.display = 'block';
 
             // Hide Go Back if it's the first item
-            if (currentIndex === 0) {
+            if (currentIndex === unannotatedItems[0]) {
                 goBackBtn.style.display = 'none';
             } else {
                 goBackBtn.style.display = 'block';
             }
 
             // Hide Go Forward if it's the last item
-            if (currentIndex >= totalItems - 1) {
+            if (currentIndex === unannotatedItems[unannotatedItems.length - 1]) {
                 goForwardBtn.style.display = 'none';
             } else {
                 goForwardBtn.style.display = 'block';
@@ -496,14 +506,14 @@
             const goBackBtn = document.getElementById('go-back');
 
             // Hide "Go Forward" if at the last item, otherwise show it
-            if (currentIndex >= totalItems - 1) {
+            if (currentIndex === unannotatedItems[unannotatedItems.length - 1]) {
                 goForwardBtn.style.visibility = 'hidden';
             } else {
                 goForwardBtn.style.visibility = 'visible';
             }
 
             // Hide "Go Back" if at the first item, otherwise show it
-            if (currentIndex <= 0) {
+            if (currentIndex === unannotatedItems[0]) {
                 goBackBtn.style.visibility = 'hidden';
             } else {
                 goBackBtn.style.visibility = 'visible';
@@ -511,7 +521,7 @@
         }
 
         // Load the first document by default
-        loadDocument(currentIndex);
+        //loadDocument(currentIndex);
 
         // Diff button event listener
         const diffBtn = document.getElementById('diff-btn');
@@ -593,7 +603,8 @@
         document.getElementById('go-forward').addEventListener('click', () => {
             showLoadingModal();
             setTimeout(() => {
-                loadDocument(currentIndex + 1); // Move to the next document
+                const nextIndex = unannotatedItems[unannotatedItems.indexOf(currentIndex) + 1];
+                loadDocument(nextIndex); // Move to the next unannotated document
                 hideLoadingModal(); // Hide the loading modal after the new document is loaded
                 resetButtons(); // Reset button states
 
@@ -610,7 +621,8 @@
         document.getElementById('go-back').addEventListener('click', () => {
             showLoadingModal();
             setTimeout(() => {
-                loadDocument(currentIndex - 1); // Move to the previous document
+                const prevIndex = unannotatedItems[unannotatedItems.indexOf(currentIndex) - 1];
+                loadDocument(prevIndex); // Move to the previous unannotated document
                 hideLoadingModal(); // Hide the loading modal after the new document is loaded
                 resetButtons(); // Reset button states
 
@@ -663,6 +675,12 @@
                         .catch((error) => {
                             console.error("Error updating progress:", error);
                         });
+
+                        // Remove the currentIndex from the unannotatedItems list
+                        const currentIndexPos = unannotatedItems.indexOf(currentIndex);
+                        if (currentIndexPos > -1) {
+                            unannotatedItems.splice(currentIndexPos, 1);
+                        }
                     }).catch((error) => {
                         console.error("Error logging preference:", error);
                     });
