@@ -60,7 +60,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
-
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
     <script>
         // Your Firebase configuration
         const firebaseConfig = {
@@ -78,26 +78,51 @@
         const auth = firebase.auth();
 
         // Handle registration form submission
-        document.getElementById('registerForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+document.getElementById('registerForm').addEventListener('submit', function(event) {
+    event.preventDefault();
 
-            // Get the entered email and password
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
+    // Get the entered email and password
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
 
-            // Use Firebase Authentication to create a new user
-            auth.createUserWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                console.log("User registered:", userCredential.user);
-                alert("Registration successful! Please log in.");
-                // Optionally redirect to login.html after registration
-                window.location.href = 'login.html';
-            })
-            .catch((error) => {
-                console.error("Error during registration:", error);
-                alert("Error registering: " + error.message);
+    // Use Firebase Authentication to create a new user
+    auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            const userId = userCredential.user.uid;
+
+            // Count the number of users in the `users` collection
+            db.collection('users').get().then((querySnapshot) => {
+                const totalUsers = querySnapshot.size;
+
+                // Calculate groupIndex using total number of users (round-robin style)
+                const groupIndex = totalUsers % 12;
+
+                // Store groupIndex and email in Firestore
+                db.collection('users').doc(userId).set({
+                    email: userCredential.user.email,
+                    groupIndex: groupIndex,
+                    registration_date: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    console.log("User registered and groupIndex assigned:", groupIndex);
+                    alert("Registration successful! Please log in.");
+                    // Redirect to login.html after registration
+                    window.location.href = 'login.html';
+                })
+                .catch((error) => {
+                    console.error("Error storing groupIndex in Firestore:", error);
+                    alert("Error storing group index: " + error.message);
+                });
+            }).catch((error) => {
+                console.error("Error counting users in Firestore:", error);
+                alert("Error during registration: " + error.message);
             });
+        })
+        .catch((error) => {
+            console.error("Error during registration:", error);
+            alert("Error registering: " + error.message);
         });
+    });
     </script>
 </body>
 </html>
