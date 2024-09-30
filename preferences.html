@@ -185,8 +185,6 @@
 </head>
 
 <body>
-    <button id="jump2new-btn" style="position: fixed; top: 10px; right: 10px; padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; display: none;">Jump2new</button>
-
     <h1 id="survey-title" style="font-family: Helvetica, Arial, sans-serif; color: white; text-align: center;"></h1>
     <img id="pdf-image" src="" alt="PDF Snippet">
     
@@ -281,19 +279,6 @@
         let originalText1 = '';
         let originalText2 = '';
 
-        document.getElementById('jump2new-btn').addEventListener('click', function() {
-            loadFirstUnansweredItem();
-        });
-
-        function toggleJump2newButton(selectionsMade, totalItems) {
-            const jump2newBtn = document.getElementById('jump2new-btn');
-            if (selectionsMade < totalItems) {
-                jump2newBtn.style.display = 'block';
-            } else {
-                jump2newBtn.style.display = 'none';
-            }
-        }
-
         function preloadUnannotatedItems() {
             if (currentUser) {
                 const userId = currentUser.uid;
@@ -380,7 +365,6 @@
                             document.getElementById('survey-title').innerHTML = `Idx: ${index} (Progress: <span id="progress-made">${selectionsMade}</span>/${totalItems})`;
                             document.getElementById('progress-summary').innerHTML = `<span id="progress-made-summary">${selectionsMade}</span>/${totalItems}`;
                             highlightProgressText();
-                            toggleJump2newButton(selectionsMade, totalItems);
                         })
                         .catch((error) => {
                             console.error("Error retrieving user preferences count:", error);
@@ -576,7 +560,6 @@
                             document.getElementById('progress-summary').innerHTML = `<span id="progress-made-summary">${selectionsMade}</span>/${totalItems}`;
 
                             highlightProgressText();
-                            toggleJump2newButton(selectionsMade, totalItems);
                         })
                         .catch((error) => {
                             console.error("Error updating progress:", error);
