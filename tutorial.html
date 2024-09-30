@@ -43,6 +43,9 @@
             list-style-type: disc;
             padding-left: 20px;
         }
+        ul li {
+            margin-bottom: 18px; /* Adjust the value to create more/less space */
+        }
         /* Go Back Button */
         .go-back-btn {
             background-color: white;
@@ -65,35 +68,44 @@
 
     <section>
         <h2>Setting</h2>
-        <p>The quality of output text from a parser is crucial for us (direct impact on LLM performance). 
-            However, there is no universal measure to assess the goodness of parsed text. Surrogate measures like BLEU were created for sentence-length, 
-            neural translation; hardly able to handle comparisons of texts spanning dozens of pages or LaTeX. Regardless, faced with two options most people have 
-        a good idea what we prefer. DPO (direct preference optimization) allows AI models to fine-tune on these preferences and align models with these user preferences. </p>
+        <p>Text quality directly impacts LLM performance. Unfortunately, there is no universal measure for text quality. Metrics like BLEU/ROUGE/CER were created for sentence-length 
+            neural translations - hardly able to handle comparisons of multi-page scientific documents. Regardless, faced with two options most people have 
+        a good idea what we prefer. This websites elicits such preferences. </p>
         <img src="https://lh3.googleusercontent.com/d/1y4vgs6uLcOe_POpoHq4uCGF12OlRjqPe" alt="Setting Image">
-        <p>Imagine the following situation: You hold a page of your favorite document in your hand that is about to disentigrate. 
-            Two parsers provide a good textual guess of its content but you can only pick one. What option do you choose (for whatever reasons you deem reasonable)?
+        <p>Imagine you hold a document page in your hand that is about to disintegrate. What text of the two presented to you *best* represents the textual content of that page?
         </p>
     </section>
 
     <section>
-        <h2>Why is this meaningful?</h2>
+        <h2>Why is this meaningful? 🤔</h2>
         <ul>
-            <li>We parse ~1 billion document pages: shouldn't we take a look what comes out?</li>
-            <li>Get a feeling for different parsers, their strengths their failure modes</li>
-            <li>Develop a new metric & help to step away BLEU, ROUGE, etc. that were never ment for long text comparisons</li>
+            <li>We parse ~1 billion document pages: shouldn't we take a look at the output?</li>
+            <li>Develop a new metric & help to step away BLEU, ROUGE, etc. that were never meant for long text comparisons of of highly scientific content</li>
             <li>Training data for DPO --> it will improve our parsing quality!</li>
-            <li>Test data for evaluation --> see were we are and what improvements can be made that are highly valued by users</li>
+            <li>Test data for evaluation --> see where we are and what improvements can be made that are highly valued by users</li>
+            <li>Get a feeling for different parsers, their strengths their failure modes</li>
+            <li>IPDPS deadline: October 3rd, 2024 :-)</li>
+        </ul>
+    </section>
+
+    <section></section>
+        <h2>Technical questions ⚙️❓</h2>
+        <ul>
+            <li>*"I preferred the text on the left but the one on the right 'survived' for the next selection. What's wrong?"* Choices are **pre-selected and hence not adaptive to user selection**. No reason to overthink this.  </li>
+            <li>Is there a button to go back and revise choices? **No**</li>
+            <li>What parsers created the text snipptes? **Many**: Nougat, Marker, Grobid, PyMuPDF, pypdf. Occasionally, GPT-4, and tesseract.</li>
+            <li>I know the output format of a few parsers: what if I'm biased? **The text formatting was scrambled to prevent biasing participants.** </li>
             <li>IPDPS deadline: October 3rd 2024 :-)</li>
         </ul>
     </section>
 
     <section>
-        <h2>Features to consider (in arbitrary order)</h2>
+        <h2>Factors to consider 📌</h2>
         <ul>
-            <li>Text dropped, cut, or misaligned</li>
+            <li>Text dropped, cut, or (drastically) misaligned</li>
             <li>Mis-parsed domain-specific words (e.g. <code>compiler</code> → <code>composer</code>)</li>
-            <li>Scrambled LaTeX equations (e.g. <code>S f(xdx$</code>)</li>
-            <li>Irregular formatting (e.g. arbitrary newlines)</li>
+            <li>Irregular formatting (e.g. excessive newlines, no whitespaces)</li>
+            <li>Scrambled LaTeX equations (e.g.  \( \int_{0}^{\infty} f(y) \mbox{d}y \) <code>So 8 f( xdx ]$</code>)</li>
         </ul>
     </section>
 
@@ -104,7 +116,7 @@
     </section>
 
     <section>
-        <h2>Navigation</h2>
+        <h2>Navigation 🧭</h2>
         <p> Use the mouse (for navigation, e.g., <strong>Go Forward</strong> and <strong>Go Back</strong>) or to make a choice <strong>I prefer this</strong> or <strong>Neither</strong>.</p>
         <img src="https://lh3.googleusercontent.com/d/11U5zbH4eoiGj9RphbhedqcOZ2XvO746Q" alt="Arrow keys">
         <div class="caption">Arrow keys</div>
@@ -113,16 +125,17 @@
     </section>
 
     <section>
-        <h2>Advice</h2>
+        <h2>Advice 📌</h2>
         <ul>
-            <li>Be principled but follow your gut (preferences are not fixed rules; otherwise we could code them up)</li>
-            <li>Don't read but skim (instead check subsection titles, paragraph beginnings, exotic words)</li>
-            <li>Consider in advance how important meta data (e.g., names of authors, DOI, dates, etc.), equations, subsection titles, etc. are for a scientific document page in your opinion</li>
+            <li>**Don't read but skim** Glance at subsection titles, paragraph beginnings/endings, exotic words.</li>
+            <li>Be principled but follow your gut: Preferences are not fixed rules otherwise we could code them up)</li>
+            <li>Judge, not study. It doesn't take domain knowledge to spot errors. You won't be quizzed on the content of these documents at the end. </li>
+            <li>The more you annotate the more you help</li>
         </ul>
     </section>
 
     <!-- Go Back Button -->
     <button class="go-back-btn" onclick="window.location.href='login.html'">Go Back</button>
-
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </body>
 </html>
