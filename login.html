@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Existing head content -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log into Parser-Output-Survey</title>
     <style>
+        /* Your existing styles */
         body {
             background-color: #181818; /* Dark background color */
             color: #f1f1f1;            /* Light text color */
@@ -30,6 +32,7 @@
         input[type="text"], input[type="password"] {
             font-size: 18px;
             padding: 10px;
+            width: 250px; /* Added width for consistency */
             border: none;
             border-radius: 5px;
             background-color: #2a2a2a;
@@ -64,7 +67,6 @@
             width: 30%;
             height: auto;
         }
-        
     </style>
 </head>
 <body>
@@ -82,8 +84,8 @@
 
         <!-- Username and Password fields -->
         <form id="loginForm">
-            <input type="text" id="email" name="email" placeholder="Enter email" required><br><br>
-            <input type="password" id="password" name="password" placeholder="Enter password" required><br><br>
+            <input type="text" id="email" name="email" placeholder="Enter email" required><br>
+            <input type="password" id="password" name="password" placeholder="Enter password" required><br>
             <button type="submit">Submit</button>
         </form>
     </div>
@@ -123,30 +125,18 @@
             .then((userCredential) => {
                 const userId = userCredential.user.uid;
 
-                // Count the number of users in the `users` collection
-                db.collection('users').get().then((querySnapshot) => {
-                    const totalUsers = querySnapshot.size;
+                // Update last_login timestamp without changing groupIndex
+                db.collection('users').doc(userId).set({
+                    last_login: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true })
+                .then(() => {
+                    console.log("User logged in:", userCredential.user);
 
-                    // Calculate groupIndex using total number of users (round-robin style)
-                    const groupIndex = totalUsers % 12;
-
-                    // Store groupIndex in Firestore for traceability
-                    db.collection('users').doc(userId).set({
-                        email: userCredential.user.email,
-                        groupIndex: groupIndex,
-                        last_login: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true })  // merge: true to avoid overwriting other fields if they exist
-                    .then(() => {
-                        console.log("User logged in:", userCredential.user);
-
-                        // Redirect to preferences.html
-                        window.location.href = 'preferences.html';
-                    })
-                    .catch((error) => {
-                        console.error("Error storing groupIndex in Firestore:", error);
-                    });
-                }).catch((error) => {
-                    console.error("Error counting users in Firestore:", error);
+                    // Redirect to preferences.html
+                    window.location.href = 'preferences.html';
+                })
+                .catch((error) => {
+                    console.error("Error updating last_login in Firestore:", error);
                 });
             })
             .catch((error) => {
