@@ -1,53 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- (Your existing head content) -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register for Parser-Output-Survey</title>
+    <!-- (Your existing style content) -->
     <style>
-        body {
-            background-color: #181818;
-            color: #f1f1f1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            flex-direction: column;
-        }
-        .register-container {
-            text-align: center;
-        }
-        h1 {
-            font-size: 48px;
-            color: #f1f1f1;
-        }
-        input[type="email"], input[type="password"] {
-            font-size: 18px;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            background-color: #2a2a2a;
-            color: #f1f1f1;
-            margin-top: 20px;
-        }
-        button {
-            font-size: 18px;
-            padding: 10px 20px;
-            margin-top: 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
+        /* Your existing CSS styles */
     </style>
 </head>
 <body>
+    <!-- (Your existing body content) -->
     <div class="register-container">
         <h1>Register</h1>
         <form id="registerForm">
@@ -60,11 +24,13 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <!-- Include the Firestore SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
     <script>
         // Your Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyCcyCr0ZC1doZK1W1zc0QMfPVsP__81mhI",
+            // (Your existing Firebase configuration)
+            apiKey: "AIzaSyCcyCr0ZC...",
             authDomain: "parser-output-survey.firebaseapp.com",
             projectId: "parser-output-survey",
             storageBucket: "parser-output-survey.appspot.com",
@@ -77,52 +43,55 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
+        // Initialize Firestore (Add this line)
+        const db = firebase.firestore();
+
         // Handle registration form submission
-document.getElementById('registerForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault();
 
-    // Get the entered email and password
-    const email = document.getElementById('register-email').value;
-    const password = document.getElementById('register-password').value;
+            // Get the entered email and password
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
 
-    // Use Firebase Authentication to create a new user
-    auth.createUserWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-            const userId = userCredential.user.uid;
+            // Use Firebase Authentication to create a new user
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const userId = userCredential.user.uid;
 
-            // Count the number of users in the `users` collection
-            db.collection('users').get().then((querySnapshot) => {
-                const totalUsers = querySnapshot.size;
+                    // Count the number of users in the `users` collection
+                    db.collection('users').get().then((querySnapshot) => {
+                        const totalUsers = querySnapshot.size;
 
-                // Calculate groupIndex using total number of users (round-robin style)
-                const groupIndex = totalUsers % 12;
+                        // Calculate groupIndex using total number of users (round-robin style)
+                        const groupIndex = totalUsers % 12;
 
-                // Store groupIndex and email in Firestore
-                db.collection('users').doc(userId).set({
-                    email: userCredential.user.email,
-                    groupIndex: groupIndex,
-                    registration_date: firebase.firestore.FieldValue.serverTimestamp()
-                })
-                .then(() => {
-                    console.log("User registered and groupIndex assigned:", groupIndex);
-                    alert("Registration successful! Please log in.");
-                    // Redirect to login.html after registration
-                    window.location.href = 'login.html';
+                        // Store groupIndex and email in Firestore
+                        db.collection('users').doc(userId).set({
+                            email: userCredential.user.email,
+                            groupIndex: groupIndex,
+                            registration_date: firebase.firestore.FieldValue.serverTimestamp()
+                        })
+                        .then(() => {
+                            console.log("User registered and groupIndex assigned:", groupIndex);
+                            alert("Registration successful! Please log in.");
+                            // Redirect to login.html after registration
+                            window.location.href = 'login.html';
+                        })
+                        .catch((error) => {
+                            console.error("Error storing groupIndex in Firestore:", error);
+                            alert("Error storing group index: " + error.message);
+                        });
+                    }).catch((error) => {
+                        console.error("Error counting users in Firestore:", error);
+                        alert("Error during registration: " + error.message);
+                    });
                 })
                 .catch((error) => {
-                    console.error("Error storing groupIndex in Firestore:", error);
-                    alert("Error storing group index: " + error.message);
+                    console.error("Error during registration:", error);
+                    alert("Error registering: " + error.message);
                 });
-            }).catch((error) => {
-                console.error("Error counting users in Firestore:", error);
-                alert("Error during registration: " + error.message);
-            });
-        })
-        .catch((error) => {
-            console.error("Error during registration:", error);
-            alert("Error registering: " + error.message);
         });
-    });
     </script>
 </body>
 </html>
