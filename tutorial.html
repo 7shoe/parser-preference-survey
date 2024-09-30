@@ -68,45 +68,12 @@
 
     <section>
         <h2>Setting</h2>
-        <p>Text quality directly impacts LLM performance. Unfortunately, there is no universal measure for text quality. Metrics like BLEU/ROUGE/CER were created for sentence-length 
-            neural translations - hardly able to handle comparisons of multi-page scientific documents. Regardless, faced with two options most people have 
+        <p>Text quality directly impacts LLM performance. Unfortunately, there is no universal measure for text quality. Metrics like BLEU etc. were created for sentence-length 
+            translations - hardly able to compare multi-page scientific documents. Regardless, faced with two options most people have 
         a good idea what we prefer. This websites elicits such preferences. </p>
         <img src="https://lh3.googleusercontent.com/d/1y4vgs6uLcOe_POpoHq4uCGF12OlRjqPe" alt="Setting Image">
         <p>Imagine you hold a document page in your hand that is about to disintegrate. What text of the two presented to you *best* represents the textual content of that page?
         </p>
-    </section>
-
-    <section>
-        <h2>Why is this meaningful? 🤔</h2>
-        <ul>
-            <li>We parse ~1 billion document pages: shouldn't we take a look at the output?</li>
-            <li>Develop a new metric & help to step away BLEU, ROUGE, etc. that were never meant for long text comparisons of of highly scientific content</li>
-            <li>Training data for DPO --> it will improve our parsing quality!</li>
-            <li>Test data for evaluation --> see where we are and what improvements can be made that are highly valued by users</li>
-            <li>Get a feeling for different parsers, their strengths their failure modes</li>
-            <li>IPDPS deadline: October 3rd, 2024 :-)</li>
-        </ul>
-    </section>
-
-    <section></section>
-        <h2>Technical questions ⚙️❓</h2>
-        <ul>
-            <li>*"I preferred the text on the left but the one on the right 'survived' for the next selection. What's wrong?"* Choices are **pre-selected and hence not adaptive to user selection**. No reason to overthink this.  </li>
-            <li>Is there a button to go back and revise choices? **No**</li>
-            <li>What parsers created the text snipptes? **Many**: Nougat, Marker, Grobid, PyMuPDF, pypdf. Occasionally, GPT-4, and tesseract.</li>
-            <li>I know the output format of a few parsers: what if I'm biased? **The text formatting was scrambled to prevent biasing participants.** </li>
-            <li>IPDPS deadline: October 3rd 2024 :-)</li>
-        </ul>
-    </section>
-
-    <section>
-        <h2>Factors to consider 📌</h2>
-        <ul>
-            <li>Text dropped, cut, or (drastically) misaligned</li>
-            <li>Mis-parsed domain-specific words (e.g. <code>compiler</code> → <code>composer</code>)</li>
-            <li>Irregular formatting (e.g. excessive newlines, no whitespaces)</li>
-            <li>Scrambled LaTeX equations (e.g.  \( \int_{0}^{\infty} f(y) \mbox{d}y \) <code>So 8 f( xdx ]$</code>)</li>
-        </ul>
     </section>
 
     <section>
@@ -116,13 +83,50 @@
     </section>
 
     <section>
+        <h2>Why is this meaningful? 🤔</h2>
+        <ul>
+            <li>We parse ~1B pages: Shouldn't we take a look at the output?</li>
+            <li>Develop a new metric to assess quality of highly scientific content</li>
+            <li>Training data for DPO --> it will improve our parsing quality!</li>
+            <li>Test data for evaluation --> identify potential for improvement</li>
+            <li>Get a feeling for parsers</li>
+            <li>IPDPS deadline: October 3rd, 2024 ⏳</li>
+        </ul>
+    </section>
+
+    <section>
         <h2>Navigation 🧭</h2>
         <p> Use the mouse (for navigation, e.g., <strong>Go Forward</strong> and <strong>Go Back</strong>) or to make a choice <strong>I prefer this</strong> or <strong>Neither</strong>.</p>
         <img src="https://lh3.googleusercontent.com/d/11U5zbH4eoiGj9RphbhedqcOZ2XvO746Q" alt="Arrow keys">
         <div class="caption">Arrow keys</div>
         <img src="https://lh3.googleusercontent.com/d/1C-Lv9thYhjVrWZobE_nczwZa2COHHTr7" alt="Similarity highlighting">
-        <div class="caption">Similarity highlighting: XXX</div>
+        <div class="caption">Similarity highlighting: Toggle the `=`-button</div>
     </section>
+
+    <section></section>
+        <h2>Technical questions ⚙️❓</h2>
+        <ul>
+            <li>*"I preferred one text but the other made it to the next round. Why?"* Choices are **pre-selected and hence not adaptive to user selection**. No reason to overthink this.  </li>
+            <li>Is there a button to go back and revise choices? **No**</li>
+            <li>What parsers created the text snipptes? **Many**: Nougat, Marker, Grobid, PyMuPDF, pypdf. Occasionally, GPT-4, and tesseract.</li>
+            <li>I know the output format of a few parsers: what if I'm biased? **The text formatting was scrambled (e.g. insertion/deletion of `#`) to prevent biasing participants.** </li>
+            <li>IPDPS deadline: October 3rd 2024 :-)</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Factors to consider 📌</h2>
+        <ul>
+            <li>Text dropped, added, or (drastically) misaligned</li>
+            <li>Mis-parsed domain-specific words (e.g. <code>compiler</code> → <code>composer</code>)</li>
+            <li>Irregular formatting (e.g. excessive newlines, no whitespaces)</li>
+            <li>Scrambled LaTeX equations (e.g.  \( \int_{0}^{\infty} f(y) \mbox{d}y \) → <code>So 8 f( xdx ]$</code>)</li>
+        </ul>
+    </section>
+
+    <!-- Go Back Button -->
+    <button class="go-back-btn" onclick="window.location.href='login.html'">Go Back</button>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <section>
         <h2>Advice 📌</h2>
@@ -134,8 +138,5 @@
         </ul>
     </section>
 
-    <!-- Go Back Button -->
-    <button class="go-back-btn" onclick="window.location.href='login.html'">Go Back</button>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </body>
 </html>
