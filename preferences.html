@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Existing head content -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preferences</title>
     <style>
+        /* Your existing styles */
         body {
             background-color: #181818;
             color: #f1f1f1;
@@ -16,10 +18,10 @@
         }
         #pdf-image {
             width: 38%;
-            margin-bottom: 0;  /* Set to 0 if extra space */
-            padding-bottom: 0; /* Set to 0 if extra space */
-            display: block;    /* Ensure it's a block-level element */
-            background-color: transparent; /* Just in case there's any background-color inherited */
+            margin-bottom: 0;
+            padding-bottom: 0;
+            display: block;
+            background-color: transparent;
         }
         .text-box-container {
             display: flex;
@@ -86,22 +88,20 @@
         #go-back, #go-forward {
             background-color: #555;
             color: white;
-            position: fixed; /* Fix the buttons in place */
-            bottom: 20px; /* Distance from the bottom */
+            position: fixed;
+            bottom: 20px;
             padding: 10px;
             font-size: 16px;
             cursor: pointer;
-            z-index: 1000; /* Ensure the buttons stay on top */
-            display: none; /* Initially hidden */
+            z-index: 1000;
+            display: none;
         }
         #go-back {
-            left: 20px; /* Align Go Back button to the left */
+            left: 20px;
         }
-
         #go-forward {
-            right: 20px; /* Align Go Forward button to the right */
+            right: 20px;
         }
-
         #go-forward:disabled {
             background-color: grey;
             cursor: not-allowed;
@@ -131,28 +131,26 @@
             font-weight: normal;
         }
         .highlight {
-            background-color: rgba(255, 255, 0, 0.5); /* Semi-transparent yellow */
+            background-color: rgba(255, 255, 0, 0.5);
         }
         /* The Modal (background) */
         .modal {
-            display: none; /* Hidden by default */
+            display: none;
             position: fixed;
-            z-index: 1; /* Sit on top */
+            z-index: 1;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            font-size: 22px; /* Adjust font size if needed */
-            background-color: rgba(0, 0, 0, 0.5); /* white background */
-            color: black; /* Set the text color here */
+            font-size: 22px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: black;
         }
-
         /* Modal text color */
         .modal-text { 
-            color: black; /* Set the text color to black */
-            font-size: 20px; /* Adjust font size if needed */
+            color: black;
+            font-size: 20px;
         }
-
         /* Modal Content */
         .modal-content {
             background-color: #fefefe;
@@ -166,7 +164,6 @@
             top: 50%;
             position: relative;
         }
-
         /* Close Button */
         .close-btn {
             color: #aaa;
@@ -174,14 +171,12 @@
             font-size: 28px;
             font-weight: bold;
         }
-
         .close-btn:hover,
         .close-btn:focus {
             color: black;
             text-decoration: none;
             cursor: pointer;
         }
-
         /* Green highlight effect with fade */
         @keyframes fadeGreen {
             0% { color: inherit; }
@@ -192,7 +187,6 @@
             animation: fadeGreen 1s ease-in-out;
         }
     </style>
-
 </head>
 
 <body>
@@ -249,6 +243,7 @@
         let groupIndex = null;
         let totalItems = 0;
         let unannotatedItems = [];
+        let allItems = []; // Added to store all item IDs
         let currentIndex = 0;
         let diffBtnActive = false;
 
@@ -268,16 +263,9 @@
                         groupIndex = doc.data().groupIndex;
                         console.log("Existing User Group Index:", groupIndex);
                     } else {
-                        groupIndex = Math.floor(Math.random() * 12);
-                        console.log("New User Group Index:", groupIndex);
-
-                        userDocRef.set({ groupIndex: groupIndex }, { merge: true })
-                        .then(() => {
-                            console.log("Group Index stored successfully");
-                        })
-                        .catch((error) => {
-                            console.error("Error storing Group Index:", error);
-                        });
+                        console.error("Group Index not found for user.");
+                        // Handle this case as needed
+                        groupIndex = 0; // Default to groupIndex 0 if not found
                     }
 
                     preloadUnannotatedItems();
@@ -315,9 +303,9 @@
 
         function preloadUnannotatedItems() {
             if (currentUser) {
-                const userEmail = currentUser.email;
+                const userId = currentUser.uid;
 
-                db.collection(`user_preferences_${groupIndex}`).where('userName', '==', userEmail).get()
+                db.collection(`user_preferences_${groupIndex}`).where('userId', '==', userId).get()
                 .then((querySnapshot) => {
                     let annotatedIds = [];
                     querySnapshot.forEach((doc) => {
@@ -329,15 +317,21 @@
                         totalItems = querySnapshot.size;
                         querySnapshot.forEach((doc) => {
                             const id = doc.data().id;
+                            allItems.push(id); // Collect all item IDs
                             if (!annotatedIds.includes(id)) {
                                 unannotatedItems.push(id);
                             }
-                            // update button visibility
-                            updateButtonVisibility();
                         });
 
-                        currentIndex = unannotatedItems[0];
+                        // Determine the currentIndex
+                        if (unannotatedItems.length > 0) {
+                            currentIndex = unannotatedItems[0];
+                        } else {
+                            currentIndex = allItems[0]; // Start from the first item if all are annotated
+                        }
+
                         loadDocument(currentIndex);
+                        updateButtonVisibility();
                     }).catch((error) => {
                         console.error("Error retrieving user group items:", error);
                     });
@@ -386,7 +380,7 @@
                         });
 
                         db.collection(`user_preferences_${groupIndex}`)
-                        .where('userName', '==', currentUser.email)
+                        .where('userId', '==', currentUser.uid)
                         .get()
                         .then((querySnapshot) => {
                             const selectionsMade = querySnapshot.size;
@@ -403,7 +397,7 @@
 
                         highlightPreviousChoice(index);
                         text1Elem.setAttribute('data-diffs', JSON.stringify(data.diff));
-                        updateButtonVisibility(); // Updated to use display instead of visibility
+                        updateButtonVisibility();
 
                         const choiceAttributes = {
                             url: data.url,
@@ -452,7 +446,7 @@
             const goBackBtn = document.getElementById('go-back');
             const goForwardBtn = document.getElementById('go-forward');
 
-            const currentPos = unannotatedItems.indexOf(currentIndex);
+            const currentPos = allItems.indexOf(currentIndex);
 
             // Show Go Back button if not on the first item
             if (currentPos > 0) {
@@ -462,7 +456,7 @@
             }
 
             // Show Go Forward button if not on the last item
-            if (currentPos < unannotatedItems.length - 1) {
+            if (currentPos < allItems.length - 1) {
                 goForwardBtn.style.display = 'block';
             } else {
                 goForwardBtn.style.display = 'none';
@@ -528,7 +522,7 @@
                 if (progressMadeSummary) {
                     progressMadeSummary.classList.remove('fade-green');
                 }
-            }, 1000); // Duration matches the CSS animation duration
+            }, 1000);
         }
 
         function showError() {
@@ -548,8 +542,8 @@
         document.getElementById('go-forward').addEventListener('click', () => {
             showLoadingModal();
             setTimeout(() => {
-                const currentPos = unannotatedItems.indexOf(currentIndex);
-                const nextIndex = unannotatedItems[currentPos + 1];
+                const currentPos = allItems.indexOf(currentIndex);
+                const nextIndex = allItems[currentPos + 1];
                 if (nextIndex !== undefined) {
                     loadDocument(nextIndex);
                 } else {
@@ -570,8 +564,8 @@
         document.getElementById('go-back').addEventListener('click', () => {
             showLoadingModal();
             setTimeout(() => {
-                const currentPos = unannotatedItems.indexOf(currentIndex);
-                const prevIndex = unannotatedItems[currentPos - 1];
+                const currentPos = allItems.indexOf(currentIndex);
+                const prevIndex = allItems[currentPos - 1];
                 if (prevIndex !== undefined) {
                     loadDocument(prevIndex);
                 }
@@ -717,21 +711,21 @@
 
     </script>
 
-<!-- End of Line Modal -->
-<div id="endOfLineModal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn">&times;</span>
-        <p>🎉 You have reached the end of the items ... for now 🥲<br>
-           Please come back later.</p>
+    <!-- End of Line Modal -->
+    <div id="endOfLineModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <p>🎉 You have reached the end of the items ... for now 🥲<br>
+               Please come back later.</p>
+        </div>
     </div>
-</div>
 
-<!-- Loading Modal -->
-<div id="loadingModal" class="modal">
-    <div class="modal-content">
-        <p style="font-size: 50px; text-align: center;">⌛</p> <!-- Display the hourglass emoji -->
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <p style="font-size: 50px; text-align: center;">⌛</p> <!-- Display the hourglass emoji -->
+        </div>
     </div>
-</div>
 
 </body>
 </html>
